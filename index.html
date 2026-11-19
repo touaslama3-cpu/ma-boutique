@@ -35,16 +35,56 @@ const SHOP = {
   paymentEnabled: false
 };
 // Produits de démonstration : remplacer par de vrais produits dont la revente et les visuels sont autorisés.
+
 const products = [
- {id:1,name:"Sac cabas du quotidien",category:"Accessoires",price:24.90,emoji:"👜",desc:"Un format pratique pour accompagner vos journées.",tag:"Idée cadeau"},
- {id:2,name:"Gourde isotherme",category:"Maison",price:16.90,emoji:"🥤",desc:"Une compagne pratique pour vos déplacements.",tag:"Pratique"},
- {id:3,name:"Écouteurs sans fil",category:"High-tech",price:29.90,emoji:"🎧",desc:"Un accessoire audio compact pour le quotidien.",tag:"Tendance"},
- {id:4,name:"Bougie décorative",category:"Maison",price:12.90,emoji:"🕯️",desc:"Une petite touche cosy pour votre intérieur.",tag:"Maison"},
- {id:5,name:"T-shirt essentiel",category:"Mode",price:19.90,emoji:"👕",desc:"Un basique facile à associer.",tag:"Essentiel"},
- {id:6,name:"Montre minimaliste",category:"Accessoires",price:34.90,emoji:"⌚",desc:"Une silhouette sobre pour tous les jours.",tag:"Style"},
- {id:7,name:"Lampe d'ambiance",category:"Maison",price:22.90,emoji:"💡",desc:"Une lumière douce pour votre espace.",tag:"Déco"},
- {id:8,name:"Support téléphone",category:"High-tech",price:9.90,emoji:"📱",desc:"Gardez votre téléphone bien positionné.",tag:"Malin"}
+  {
+    id: 1,
+    name: "Organisateur de câbles adhésif",
+    category: "High-tech",
+    price: 12.90,
+    emoji: "🔌",
+    desc: "Gardez vos câbles bien rangés sur votre bureau et à la maison.",
+    tag: "Best-seller"
+  },
+  {
+    id: 2,
+    name: "Support mural balais et serpillières",
+    category: "Maison",
+    price: 17.90,
+    emoji: "🧹",
+    desc: "Optimisez votre rangement avec ce support mural pratique.",
+    tag: "Populaire"
+  },
+  {
+    id: 3,
+    name: "Filtre anti-cheveux pour douche",
+    category: "Maison",
+    price: 12.90,
+    emoji: "🚿",
+    desc: "Aide à retenir les cheveux et à garder vos évacuations propres.",
+    tag: "Pratique"
+  },
+  {
+    id: 4,
+    name: "Boîte de rangement transparente",
+    category: "Maison",
+    price: 16.90,
+    emoji: "📦",
+    desc: "Rangez facilement vos petits accessoires et bijoux.",
+    tag: "Organisation"
+  },
+  {
+
+    id: 5,
+    name: "Crochets muraux adhésifs",
+    category: "Maison",
+    price: 9.90,
+    emoji: "🪝",
+    desc: "Des crochets pratiques pour suspendre vos accessoires.",
+    tag: "Petit prix"
+}
 ];
+
 let cart={};let active="Tous";
 const euro=n=>n.toLocaleString('fr-FR',{style:'currency',currency:SHOP.currency});
 function renderFilters(){const cats=['Tous',...new Set(products.map(p=>p.category))];document.getElementById('filters').innerHTML=cats.map(c=>`<button class="filter ${active===c?'active':''}" onclick="setFilter('${c}')">${c}</button>`).join('')}
