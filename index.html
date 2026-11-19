@@ -13,20 +13,20 @@
 .button,.add,.filter{transition:transform .18s ease,background .18s ease,box-shadow .18s ease}
 .button:hover,.add:hover{transform:translateY(-1px);box-shadow:0 7px 18px #153d3218}
 .filter:hover{border-color:var(--green)}
-.art{height:205px;background:#f3f3ee}
-.art img{object-fit:cover;padding:0;background:transparent}
+.art{height:205px;background:linear-gradient(145deg,#f7f8f4,#e9eee8);padding:8px}
+.art img{object-fit:contain;padding:12px;background:#fff}
 .art .fallback{z-index:0;display:grid;place-items:center;inset:0;background:linear-gradient(145deg,#e8f0e9,#f3efe6)}
-.art img{z-index:1}
+.art img{z-index:1;border-radius:10px}
 .art img.broken{display:none}
 .product h3{font-size:14px;line-height:1.45;margin:8px 0;overflow-wrap:anywhere}
 .desc{min-height:42px}
-.product{box-shadow:0 2px 10px #173d3208}
+.product{box-shadow:0 2px 10px #173d3208;display:flex;flex-direction:column}.product .pbody{display:flex;flex:1;flex-direction:column}.product .bottom{margin-top:auto;padding-top:14px}
 .product:hover{box-shadow:0 16px 38px #173d3218}
 .tag{box-shadow:0 2px 8px #0000000c}
 .trust article{box-shadow:0 3px 14px #173d3208}
 .notice{background:#fffaf0}
 .footer .logo{display:inline-block}
-@media(max-width:620px){.hero-art{width:100%;max-width:300px;aspect-ratio:1.4}.art{height:145px}.product h3{font-size:13px}.hero{min-height:auto}}
+@media(max-width:620px){.hero-art{width:100%;max-width:300px;aspect-ratio:1.4}.art{height:145px;padding:5px}.art img{padding:7px}.product h3{font-size:13px}.hero{min-height:auto}}
 @media(min-width:1100px){.grid{gap:18px}.art{height:220px}}
 </style></head><body>
 <div class="bar">✨ TAW.co — Maison • Mode homme • Accessoires</div>
@@ -56,7 +56,7 @@ const products=[
 let cart={},active="Tous";const euro=n=>n.toLocaleString("fr-FR",{style:"currency",currency:"EUR"});const el=id=>document.getElementById(id);
 function renderFilters(){const cats=["Tous",...new Set(products.map(p=>p.category))];el("filters").innerHTML=cats.map(c=>`<button class="filter ${active===c?"active":""}" aria-pressed="${active===c}" onclick="setCategory('${c}')">${c}</button>`).join("")}
 function setCategory(c){active=c;renderFilters();render()}
-function render(){const q=el("search").value.trim().toLowerCase();const list=products.filter(p=>(active==="Tous"||p.category===active)&&(p.name+" "+p.category+" "+p.desc).toLowerCase().includes(q));el("products").innerHTML=list.map(p=>'<article class="product"><div class="art"><span class="tag">'+p.tag+'</span><span class="fallback" aria-hidden="true">'+p.emoji+'</span><img src="'+p.image+'" alt="" loading="lazy" onerror="this.classList.add(\'broken\');this.previousElementSibling.style.display=\'grid\'"></div><div class="pbody"><div class="category">'+p.category+'</div><h3>'+p.name+'</h3><div class="desc">'+p.desc+'</div><div class="bottom"><span class="price">'+euro(p.price)+'</span><button class="add" onclick="add('+p.id+')">+ Ajouter</button></div></div></article>').join("")||"<p class='muted'>Aucun produit ne correspond à votre recherche.</p>";el("result").textContent=list.length+" article"+(list.length>1?"s":"")}
+function render(){const q=el("search").value.trim().toLowerCase();const list=products.filter(p=>(active==="Tous"||p.category===active)&&(p.name+" "+p.category+" "+p.desc).toLowerCase().includes(q));el("products").innerHTML=list.map(p=>'<article class="product"><div class="art"><span class="tag">'+p.tag+'</span><span class="fallback" aria-hidden="true">'+p.emoji+'</span><img src="'+p.image+'" alt="'+p.name.replace(/"/g,'&quot;')+'" loading="lazy" decoding="async" onerror="this.classList.add(\'broken\');this.previousElementSibling.style.display=\'grid\'"></div><div class="pbody"><div class="category">'+p.category+'</div><h3>'+p.name+'</h3><div class="desc">'+p.desc+'</div><div class="bottom"><span class="price">'+euro(p.price)+'</span><button class="add" aria-label="Ajouter '+p.name.replace(/"/g,'&quot;')+' au panier" onclick="add('+p.id+')">+ Ajouter</button></div></div></article>').join("")||"<p class='muted'>Aucun produit ne correspond à votre recherche.</p>";el("result").textContent=list.length+" article"+(list.length>1?"s":"")}
 function add(id){cart[id]=(cart[id]||0)+1;save();update();toast("Article ajouté au panier ✨")}
 function change(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];save();update()}
 function save(){try{localStorage.setItem("taw-cart",JSON.stringify(cart))}catch(e){}}
