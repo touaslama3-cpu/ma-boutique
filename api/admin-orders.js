@@ -4,6 +4,11 @@ const ADMIN_TOKEN = process.env.TAWCO_ADMIN_TOKEN;
 const RESEND_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.ORDER_FROM_EMAIL;
 
+function escapeHtml(value) {
+  return String(value || "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[char]));
+}
 function json(res, status, body) { return res.status(status).json(body); }
 function authorized(req) {
   const value = req.headers.authorization || "";
@@ -24,9 +29,11 @@ async function db(path, options = {}) {
 async function sendStatusEmail(order) {
   if (!RESEND_KEY || !FROM_EMAIL || !order.customer_email) return;
   const status = order.fulfillment_status || "mis à jour";
-  const tracking = order.tracking_url
-    ? '<p>Suivi : <a href="' + order.tracking_url + '">' + (order.tracking_number || "Suivre mon colis") + '</a></p>'
-    : order.tracking_number ? "<p>Numéro de suivi : " + order.tracking_number + "</p>" : "";
+  const safeTrackingUrl = typeof order.tracking_url === "string" && /^https:\/\//i.test(order.tracking_url)
+    ? order.tracking_url : "";
+  const tracking = safeTrackingUrl
+    ? '<p>Suivi : <a href="' + escapeHtml(safeTrackingUrl) + '">' + escapeHtml(order.tracking_number || "Suivre mon colis") + '</a></p>'
+    : order.tracking_number ? "<p>Numéro de suivi : " + escapeHtml(order.tracking_number) + "</p>" : "";
   await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
@@ -34,7 +41,7 @@ async function sendStatusEmail(order) {
       from: FROM_EMAIL,
       to: [order.customer_email],
       subject: "Mise à jour de votre commande TAW.co",
-      html: "<p>Bonjour " + (order.customer_name || "") + ",</p><p>Le statut de votre commande est maintenant : <strong>" + status + "</strong>.</p>" + tracking + "<p>Merci pour votre confiance — TAW.co</p>"
+      html: "<p>Bonjour " + escapeHtml(order.customer_name || "client") + ",</p><p>Le statut de votre commande est maintenant : <strong>" + escapeHtml(status) + "</strong>.</p>" + tracking + "<p>Merci pour votre confiance — TAW.co</p>"
     })
   });
 }
@@ -51,7 +58,7 @@ module.exports = async function handler(req, res) {
       return json(res, 200, { orders: data });
     }
     const body = req.body || {};
-    if (!body.id || !["à préparer", "en préparation", "expédiée", "livrée", "annulée", "remboursée"].includes(body.fulfillment_status)) return json(res, 400, { error: "Commande ou statut invalide." });
+    if (!body.id || !["à préparer", "en préparation", "expédiée", "livrée", "annulée"].includes(body.fulfillment_status)) return json(res, 400, { error: "Commande ou statut invalide." });
     const patch = { fulfillment_status: body.fulfillment_status };
     for (const key of ["tracking_number", "tracking_url", "carrier", "customer_note"]) {
       if (typeof body[key] === "string") patch[key] = body[key].slice(0, 500);
