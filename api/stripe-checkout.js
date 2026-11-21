@@ -53,7 +53,7 @@ module.exports = async function handler(req, res) {
         }
       });
     }
-    const origin = "https://www.taw.co";
+    const origin = "https://tawco.vercel.app";
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
