@@ -49,7 +49,7 @@ module.exports = async function handler(req, res) {
       })),
       shipping_address_collection: { allowed_countries: ["FR"] },
       billing_address_collection: "auto",
-      metadata: { order_source: "TAW.co", order_items: JSON.stringify(orderItems) },
+      metadata: { order_source: "TAW.co", order_items: orderItems.map(item => `${item.id}:${item.quantity}`).join(",") },
       payment_intent_data: { metadata: { order_source: "TAW.co" } },
       success_url: siteUrl + "/?payment=success&session_id={CHECKOUT_SESSION_ID}",
       cancel_url: siteUrl + "/?payment=cancelled"
