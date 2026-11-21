@@ -18,72 +18,45 @@ const CATALOG = {
 
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
-  if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
-    return res.status(405).json({ error: "Méthode non autorisée." });
-  }
-  if (!process.env.STRIPE_SECRET_KEY) {
-    return res.status(503).json({ error: "Le paiement Stripe est en attente de configuration de la clé secrète." });
+  if (req.method !== "POST") { res.setHeader("Allow", "POST"); return res.status(405).json({ error: "Méthode non autorisée." }); }
+  const secret = process.env.STRIPE_SECRET_KEY;
+  const siteUrl = process.env.SITE_URL;
+  if (!secret || !siteUrl || !/^https:\/\/[a-z0-9.-]+$/i.test(siteUrl)) {
+    return res.status(503).json({ error: "Le paiement est en attente de configuration sécurisée. Aucun paiement n’a été effectué." });
   }
   try {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const { items, email } = req.body || {};
-    if (!Array.isArray(items) || items.length < 1 || items.length > 13) {
-      return res.status(400).json({ error: "Panier invalide." });
-    }
-    if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
-      return res.status(400).json({ error: "Adresse e-mail invalide." });
-    }
-    const seen = new Set();
-    const line_items = [];
+    if (!Array.isArray(items) || items.length < 1 || items.length > 13) return res.status(400).json({ error: "Panier invalide." });
+    if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return res.status(400).json({ error: "Adresse e-mail invalide." });
+    const quantities = new Map();
     for (const item of items) {
-      const id = Number(item && item.id);
-      const quantity = Number(item && item.quantity);
-      const product = CATALOG[id];
-      if (!product || seen.has(id) || !Number.isInteger(quantity) || quantity < 1 || quantity > 20) {
-        return res.status(400).json({ error: "Un article du panier est invalide." });
-      }
-      seen.add(id);
-      line_items.push({
-        quantity,
-        price_data: {
-          currency: "eur",
-          unit_amount: product.amount,
-          product_data: { name: product.name }
-        }
-      });
+      const id = Number(item && item.id), quantity = Number(item && item.quantity);
+      if (!CATALOG[id] || !Number.isInteger(quantity) || quantity < 1 || quantity > 20) return res.status(400).json({ error: "Un article du panier est invalide." });
+      quantities.set(id, (quantities.get(id) || 0) + quantity);
     }
-    const origin = "https://tawco.vercel.app";
+    if ([...quantities.values()].some(q => q > 20)) return res.status(400).json({ error: "Quantité maximale dépassée." });
+    const orderItems = [...quantities.entries()].map(([id, quantity]) => ({
+      id, name: CATALOG[id].name, quantity, unit_amount: CATALOG[id].amount
+    }));
+    const stripe = new Stripe(secret);
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      payment_method_types: ["card"],
       customer_email: email,
-      line_items,
-      metadata: {
-        order_source: "TAW.co",
-        order_items: JSON.stringify(items.map(item => ({
-          id: Number(item.id),
-          quantity: Number(item.quantity),
-          name: CATALOG[Number(item.id)].name
-        })))
-      },
-      payment_intent_data: {
-        metadata: {
-          order_source: "TAW.co",
-          order_items: JSON.stringify(items.map(item => ({
-            id: Number(item.id),
-            quantity: Number(item.quantity),
-            name: CATALOG[Number(item.id)].name
-          })))
-        }
-      },
+      customer_creation: "always",
+      line_items: orderItems.map(item => ({
+        quantity: item.quantity,
+        price_data: { currency: "eur", unit_amount: item.unit_amount, product_data: { name: item.name } }
+      })),
+      shipping_address_collection: { allowed_countries: ["FR"] },
       billing_address_collection: "auto",
-      success_url: origin + "/?payment=success&session_id={CHECKOUT_SESSION_ID}",
-      cancel_url: origin + "/?payment=cancelled"
+      metadata: { order_source: "TAW.co", order_items: JSON.stringify(orderItems) },
+      payment_intent_data: { metadata: { order_source: "TAW.co" } },
+      success_url: siteUrl + "/?payment=success&session_id={CHECKOUT_SESSION_ID}",
+      cancel_url: siteUrl + "/?payment=cancelled"
     });
     return res.status(200).json({ url: session.url });
   } catch (error) {
     console.error("Stripe Checkout error:", error && error.message);
-    return res.status(500).json({ error: "Impossible de créer la session de paiement. Réessayez plus tard." });
+    return res.status(502).json({ error: "Impossible de créer la session de paiement. Réessayez plus tard." });
   }
 };
