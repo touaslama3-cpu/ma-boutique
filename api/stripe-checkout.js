@@ -59,6 +59,24 @@ module.exports = async function handler(req, res) {
       payment_method_types: ["card"],
       customer_email: email,
       line_items,
+      metadata: {
+        order_source: "TAW.co",
+        order_items: JSON.stringify(items.map(item => ({
+          id: Number(item.id),
+          quantity: Number(item.quantity),
+          name: CATALOG[Number(item.id)].name
+        })))
+      },
+      payment_intent_data: {
+        metadata: {
+          order_source: "TAW.co",
+          order_items: JSON.stringify(items.map(item => ({
+            id: Number(item.id),
+            quantity: Number(item.quantity),
+            name: CATALOG[Number(item.id)].name
+          })))
+        }
+      },
       billing_address_collection: "auto",
       success_url: origin + "/?payment=success&session_id={CHECKOUT_SESSION_ID}",
       cancel_url: origin + "/?payment=cancelled"
