@@ -20,7 +20,7 @@ th{color:#65746b;font-weight:600}.items{max-width:240px}.actions{display:grid;ga
 </style>
 </head>
 <body><main class="wrap">
-<header><div><h1>TAW.co — Commandes</h1><div class="muted">Espace privé de gestion des paiements, expéditions et suivis</div></div><button id="refresh">Actualiser</button></header>
+<header><div><h1>TAW.co — Commandes</h1><div class="muted">Espace privé de gestion des paiements, expéditions et suivis</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button id="export-dsers" type="button">Exporter vers DSers</button><button id="refresh">Actualiser</button></div></header>
 <section class="panel">
 <div class="login"><input id="token" type="password" autocomplete="current-password" placeholder="Jeton administrateur"><button id="connect">Accéder aux commandes</button></div>
 <div id="message" role="status"></div>
@@ -68,6 +68,18 @@ function render(orders){
  }
 }
 $("connect").addEventListener("click",load);$("refresh").addEventListener("click",load);
+$("export-dsers").addEventListener("click",async()=>{
+ token=$("token").value.trim();if(!token){message("Saisissez le jeton administrateur.");return}
+ const button=$("export-dsers");button.disabled=true;message("Préparation du fichier DSers…");
+ try{
+  const response=await fetch("/api/admin-dsers-export",{method:"POST",headers:auth(),cache:"no-store"});
+  if(!response.ok){const data=await response.json();throw new Error(data.error||"Export impossible.")}
+  const blob=await response.blob(),url=URL.createObjectURL(blob),link=document.createElement("a");
+  link.href=url;link.download="TAWco_commandes_DSerS.csv";document.body.append(link);link.click();link.remove();URL.revokeObjectURL(url);
+  message("Fichier DSers téléchargé. Les commandes exportées sont marquées pour éviter un doublon.");
+  load();
+ }catch(e){message(e.message)}finally{button.disabled=false}
+});
 $("token").addEventListener("keydown",e=>{if(e.key==="Enter")load()});
 if(token)load();
 </script></body></html>
