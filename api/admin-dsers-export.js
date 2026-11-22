@@ -50,7 +50,7 @@ module.exports = async function handler(req, res) {
     }
   }
   try {
-    const response = await db("orders?select=id,created_at,customer_phone,shipping_address,items,payment_status,fulfillment_status,dsers_exported_at&payment_status=eq.paid&dsers_exported_at=is.null&fulfillment_status=neq.remboursée&order=created_at.asc&limit=200");
+    const response = await db("orders?select=id,created_at,customer_phone,shipping_address,items,payment_status,fulfillment_status,dsers_exported_at&payment_status=eq.paid&refunded_amount=eq.0&dsers_exported_at=is.null&fulfillment_status=neq.remboursée&order=created_at.asc&limit=200");
     const orders = await response.json();
     if (!response.ok || !Array.isArray(orders)) return json(res, 502, { error: "Lecture des commandes à exporter impossible." });
     if (!orders.length) return json(res, 200, { exported_orders: 0, csv: null, message: "Aucune commande payée en attente d’export DSers." });
