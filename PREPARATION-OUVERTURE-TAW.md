@@ -47,4 +47,5 @@ Dernière mise à jour : 22 novembre 2026
 - Envoi automatique de commandes CJ : ne pas activer sans validation des variantes, coûts, stocks et livraison.
 - Codes promo au checkout : interface d'administration prête, logique de réduction Stripe à terminer.
 - Factures PDF : pas de génération avant validation des informations légales et fiscales du vendeur.
-- Aucun déploiement manuel n'a été lancé dans le cadre de cette préparation.
+- Les commits GitHub déclenchent potentiellement des déploiements automatiques Vercel. Le dernier déploiement de production observé est READY sur le commit `3db9859045fef0dec94fbb1233cd1c0a7d9fcb35`, antérieur aux derniers ajouts favoris/avis/retours/promotions. Vérifier un nouveau déploiement avant de considérer ces derniers changements comme publiés.
+- La page publique et la page publiée dans `public/` conservent le verrou de maintenance.
