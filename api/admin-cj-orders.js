@@ -59,6 +59,7 @@ module.exports = async function handler(req, res) {
     }
     if (order.cj_order_id) return json(res, 200, { already_submitted: true, cj_order_id: order.cj_order_id, cj_order_status: order.cj_order_status });
     if (!Array.isArray(order.items) || !order.items.length) return json(res, 400, { error: "La commande ne contient aucun article." });
+    if (order.items.some(item => !item.variant_key)) return json(res, 409, { error: "Les variantes client ne sont pas encore enregistrées sur cette commande. Transmission CJ bloquée pour éviter une mauvaise taille ou couleur." });
 
     const productIds = [...new Set(order.items.map(item => Number(item.id)).filter(Number.isInteger))];
     if (!productIds.length) return json(res, 400, { error: "Articles de commande non reconnus." });
@@ -70,10 +71,10 @@ module.exports = async function handler(req, res) {
     const missing = [];
     for (const item of order.items) {
       const productId = Number(item.id);
-      const key = text(item.variant_key || "default", 100).toLowerCase();
+      const key = text(item.variant_key, 100).toLowerCase();
       const matches = mappings.filter(mapping => Number(mapping.store_product_id) === productId &&
         String(mapping.variant_key).toLowerCase() === key);
-      if (matches.length !== 1) {
+      if (!key || matches.length !== 1) {
         missing.push({ product_id: productId, variant_key: key });
         continue;
       }
