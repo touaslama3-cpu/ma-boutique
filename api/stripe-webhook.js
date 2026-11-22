@@ -44,22 +44,29 @@ function escapeHtml(value) {
 }
 function parseOrderItems(raw) {
   if (typeof raw !== "string" || !raw || raw.length > 200) return [];
-  return raw.split(",").map(part => {
+  const parts = raw.split(",");
+  if (!parts.length || parts.length > 13) return [];
+  const seen = new Set();
+  const items = [];
+  for (const part of parts) {
     const match = /^(\d{1,2}):(\d{1,2})$/.exec(part);
-    if (!match) return null;
+    if (!match) return [];
     const id = Number(match[1]), quantity = Number(match[2]), product = CATALOG[id];
-    if (!product || quantity < 1 || quantity > 20) return null;
-    return { id, name: product.name, quantity, unit_amount: product.amount };
-  }).filter(Boolean);
+    if (!product || !Number.isInteger(quantity) || quantity < 1 || quantity > 20 || seen.has(id)) return [];
+    seen.add(id);
+    items.push({ id, name: product.name, quantity, unit_amount: product.amount });
+  }
+  return items;
 }
 async function sendEmail(to, subject, html) {
   const key = process.env.RESEND_API_KEY, from = process.env.ORDER_FROM_EMAIL;
-  if (!key || !from || !to) return;
+  if (!key || !from || !to) { console.error("Order confirmation email skipped: Resend configuration or recipient missing."); return false; }
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST", headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" },
     body: JSON.stringify({ from, to: [to], subject, html })
   });
-  if (!response.ok) console.error("Resend error:", response.status);
+  if (!response.ok) { console.error("Resend confirmation email failed:", response.status); return false; }
+  return true;
 }
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
@@ -79,7 +86,12 @@ module.exports = async function handler(req, res) {
         const details = session.shipping_details || session.customer_details || {};
         const address = details.address || {};
         const items = parseOrderItems(session.metadata?.order_items || "");
-        if (!email || !items.length) return res.status(400).json({ received: false, error: "Données de commande manquantes." });
+        const expectedTotal = items.reduce((sum, item) => sum + item.unit_amount * item.quantity, 0);
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 ||
+            !items.length || session.currency !== "eur" || Number(session.amount_total) !== expectedTotal) {
+          console.error("Rejected paid Checkout session: invalid email, catalogue items, currency or total.");
+          return res.status(400).json({ received: false, error: "Données de commande invalides." });
+        }
         const payload = {
           stripe_session_id: session.id,
           stripe_payment_intent_id: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id || null,
@@ -97,8 +109,9 @@ module.exports = async function handler(req, res) {
         if (!response.ok) { console.error("Supabase order insert failed:", response.status, rows); return res.status(503).json({ received: false }); }
         if (Array.isArray(rows) && rows.length) {
           try {
-            await sendEmail(email, "Confirmation de votre commande TAW.co",
+            const emailSent = await sendEmail(email, "Confirmation de votre commande TAW.co",
               "<p>Bonjour " + escapeHtml(payload.customer_name || "client") + ",</p><p>Nous avons bien reçu votre paiement et votre commande est enregistrée.</p><p>Montant : " + ((payload.amount_total / 100).toFixed(2)) + " €</p><p>Nous vous informerons dès l’expédition.</p><p>Merci pour votre confiance — TAW.co</p>");
+            if (!emailSent) console.error("Order confirmation email was not accepted by Resend.");
           } catch (emailError) {
             console.error("Order confirmation email failed:", emailError && emailError.message);
           }
