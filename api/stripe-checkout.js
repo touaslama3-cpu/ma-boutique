@@ -3,11 +3,21 @@ const Stripe = require("stripe");
 // Catalogue TAW actuel. Le paiement reste bloqué tant que
 // TAWCO_CHECKOUT_ENABLED n'est pas explicitement défini à "true".
 const CATALOG = {
-  1: { name: "Organisateur de câbles magnétique", amount: 1490 },
-  2: { name: "Organisateur sous évier à deux niveaux", amount: 2990 },
-  3: { name: "Filtre de bonde anti-cheveux", amount: 1290 },
-  9: { name: "Organisateurs de valise – lot de voyage", amount: 2490 },
-  10: { name: "Organisateur pliable de coffre", amount: 2990 }
+  101: { name: "T-shirt essentiel femme", amount: 1990 },
+  102: { name: "Chemise oversize femme", amount: 2990 },
+  103: { name: "Robe casual", amount: 3490 },
+  104: { name: "Ensemble détente femme", amount: 3990 },
+  105: { name: "Jean coupe droite femme", amount: 3490 },
+  106: { name: "T-shirt basique homme", amount: 1990 },
+  107: { name: "Sweat à capuche homme", amount: 3490 },
+  108: { name: "Chemise casual homme", amount: 3290 },
+  109: { name: "Jean homme", amount: 3990 },
+  110: { name: "Veste légère unisexe", amount: 4490 },
+  111: { name: "Baskets lifestyle", amount: 4990 },
+  112: { name: "Sneakers minimalistes", amount: 5490 },
+  113: { name: "Sac porté épaule", amount: 2990 },
+  114: { name: "Lunettes de soleil", amount: 1990 },
+  115: { name: "Casquette urbaine", amount: 1790 }
 };
 
 module.exports = async function handler(req, res) {
@@ -23,7 +33,7 @@ module.exports = async function handler(req, res) {
   }
   try {
     const { items, email } = req.body || {};
-    if (!Array.isArray(items) || items.length < 1 || items.length > 5) return res.status(400).json({ error: "Panier invalide." });
+    if (!Array.isArray(items) || items.length < 1 || items.length > 15) return res.status(400).json({ error: "Panier invalide." });
     if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return res.status(400).json({ error: "Adresse e-mail invalide." });
     const quantities = new Map();
     for (const item of items) {
