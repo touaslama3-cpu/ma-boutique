@@ -47,7 +47,7 @@ function escapeHtml(value) {
 function parseOrderItems(raw) {
   if (typeof raw !== "string" || !raw || raw.length > 200) return [];
   const parts = raw.split(",");
-  if (!parts.length || parts.length > 13) return [];
+  if (!parts.length || parts.length > 15) return [];
   const seen = new Set();
   const items = [];
   for (const part of parts) {
