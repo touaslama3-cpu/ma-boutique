@@ -61,6 +61,8 @@ module.exports = async function handler(req, res) {
       }
       return { id, variant_key: variantKey, name: CATALOG[id].name, quantity, unit_amount: CATALOG[id].amount };
     }));
+    const encodedOrderItems = orderItems.map(item => `${item.id}:${item.quantity}:${item.variant_key}`).join(",");
+    if (encodedOrderItems.length > 500) return res.status(400).json({ error: "Le panier contient trop de variantes pour être traité en une seule commande." });
     const stripe = new Stripe(secret);
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -73,7 +75,7 @@ module.exports = async function handler(req, res) {
       shipping_address_collection: { allowed_countries: ["FR"] },
       phone_number_collection: { enabled: true },
       billing_address_collection: "auto",
-      metadata: { order_source: "TAW.co", order_items: orderItems.map(item => `${item.id}:${item.quantity}:${item.variant_key}`).join(",") },
+      metadata: { order_source: "TAW.co", order_items: encodedOrderItems },
       payment_intent_data: { metadata: { order_source: "TAW.co" } },
       success_url: siteUrl + "/?payment=success&session_id={CHECKOUT_SESSION_ID}",
       cancel_url: siteUrl + "/?payment=cancelled"
