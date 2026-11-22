@@ -3,6 +3,7 @@ const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_TOKEN = process.env.TAWCO_ADMIN_TOKEN;
 const RESEND_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.ORDER_FROM_EMAIL;
+const crypto = require("crypto");
 
 function escapeHtml(value) {
   return String(value || "").replace(/[&<>"']/g, char => ({
@@ -12,7 +13,10 @@ function escapeHtml(value) {
 function json(res, status, body) { return res.status(status).json(body); }
 function authorized(req) {
   const value = req.headers.authorization || "";
-  return ADMIN_TOKEN && value === "Bearer " + ADMIN_TOKEN;
+  if (!ADMIN_TOKEN) return false;
+  const expected = Buffer.from("Bearer " + ADMIN_TOKEN);
+  const actual = Buffer.from(value);
+  return actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
 }
 async function db(path, options = {}) {
   return fetch(SUPABASE_URL + "/rest/v1/" + path, {
@@ -70,9 +74,23 @@ module.exports = async function handler(req, res) {
       return json(res, 409, { error: "Cette commande est remboursée et ne peut plus être modifiée depuis le suivi des expéditions." });
     }
 
-    const patch = { fulfillment_status: body.fulfillment_status };
-    for (const key of ["tracking_number", "tracking_url", "carrier", "customer_note"]) {
-      if (typeof body[key] === "string") patch[key] = body[key].slice(0, 500);
+    const patch = { fulfillment_status: body.fulfillment_status, updated_at: new Date().toISOString() };
+    for (const key of ["tracking_number", "carrier", "customer_note"]) {
+      if (typeof body[key] === "string") patch[key] = body[key].trim().slice(0, 200);
+    }
+    if (typeof body.tracking_url === "string") {
+      const rawUrl = body.tracking_url.trim();
+      if (rawUrl) {
+        try {
+          const parsedUrl = new URL(rawUrl);
+          if (parsedUrl.protocol !== "https:") return json(res, 400, { error: "Le lien de suivi doit utiliser HTTPS." });
+          patch.tracking_url = parsedUrl.toString().slice(0, 500);
+        } catch (_) {
+          return json(res, 400, { error: "Lien de suivi invalide." });
+        }
+      } else {
+        patch.tracking_url = "";
+      }
     }
     const response = await db("orders?id=eq." + encodeURIComponent(body.id) + "&select=*",
       { method: "PATCH", body: JSON.stringify(patch) });
