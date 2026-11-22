@@ -8,7 +8,7 @@ const CATALOG = {
   5: { name: "Crochets muraux adhésifs", amount: 990 },
   6: { name: "T-shirt essentiel homme", amount: 1990 },
   7: { name: "Sweat à capuche homme", amount: 3490 },
-  8: { name: "Polo Maroc homme", amount: 2790 },
+  8: { name: "Polo homme classique", amount: 2790 },
   9: { name: "Baskets urbaines", amount: 4490 },
   10: { name: "Montre connectée style sport", amount: 3990 },
   11: { name: "Lunettes de soleil polarisées sport", amount: 1890 },
