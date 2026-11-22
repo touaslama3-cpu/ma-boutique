@@ -33,6 +33,8 @@ module.exports = async function handler(req, res) {
   }
   try {
     const { items, email } = req.body || {};
+    const supabaseUrl = process.env.SUPABASE_URL, serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !serviceKey) return res.status(503).json({ error: "Validation des variantes indisponible." });
     let customerUserId = null;
     const authHeader = req.headers.authorization || "";
     if (authHeader.startsWith("Bearer ")) {
@@ -61,8 +63,6 @@ module.exports = async function handler(req, res) {
       quantities.set(key, (quantities.get(key) || 0) + quantity);
     }
     if ([...quantities.values()].some(q => q > 20)) return res.status(400).json({ error: "Quantité maximale dépassée." });
-    const supabaseUrl = process.env.SUPABASE_URL, serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseUrl || !serviceKey) return res.status(503).json({ error: "Validation des variantes indisponible." });
     const orderItems = await Promise.all([...quantities.entries()].map(async ([key, quantity]) => {
       const [idText, variantKey] = key.split(":");
       const id = Number(idText);
