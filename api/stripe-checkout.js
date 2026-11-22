@@ -33,6 +33,20 @@ module.exports = async function handler(req, res) {
   }
   try {
     const { items, email } = req.body || {};
+    let customerUserId = null;
+    const authHeader = req.headers.authorization || "";
+    if (authHeader.startsWith("Bearer ")) {
+      const accessToken = authHeader.slice(7).trim();
+      if (!accessToken || accessToken.length > 8192) return res.status(401).json({ error: "Session client invalide. Reconnectez-vous." });
+      const authResponse = await fetch(supabaseUrl + "/auth/v1/user", {
+        headers: { apikey: serviceKey, Authorization: "Bearer " + accessToken }
+      });
+      const authUser = await authResponse.json().catch(() => null);
+      if (!authResponse.ok || !authUser || !authUser.id || String(authUser.email || "").toLowerCase() !== String(email || "").toLowerCase()) {
+        return res.status(401).json({ error: "Votre session ne correspond pas à l’adresse e-mail de commande." });
+      }
+      customerUserId = authUser.id;
+    }
     if (!Array.isArray(items) || items.length < 1 || items.length > 15) return res.status(400).json({ error: "Panier invalide." });
     if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return res.status(400).json({ error: "Adresse e-mail invalide." });
     const quantities = new Map();
@@ -75,7 +89,7 @@ module.exports = async function handler(req, res) {
       shipping_address_collection: { allowed_countries: ["FR"] },
       phone_number_collection: { enabled: true },
       billing_address_collection: "auto",
-      metadata: { order_source: "TAW.co", order_items: encodedOrderItems },
+      metadata: { order_source: "TAW.co", order_items: encodedOrderItems, ...(customerUserId ? { customer_user_id: customerUserId } : {}) },
       payment_intent_data: { metadata: { order_source: "TAW.co" } },
       success_url: siteUrl + "/?payment=success&session_id={CHECKOUT_SESSION_ID}",
       cancel_url: siteUrl + "/?payment=cancelled"
