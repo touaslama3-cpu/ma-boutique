@@ -33,6 +33,22 @@ module.exports = async function handler(req, res) {
   if (req.method !== "POST") { res.setHeader("Allow", "POST"); return json(res, 405, { error: "Méthode non autorisée." }); }
   if (!authorized(req)) return json(res, 401, { error: "Accès refusé." });
   if (!SUPABASE_URL || !SERVICE_KEY) return json(res, 503, { error: "Base de données non configurée." });
+  if (req.body && req.body.action === "confirm") {
+    const ids = req.body.order_ids;
+    if (!Array.isArray(ids) || !ids.length || ids.length > 200 || ids.some(id => typeof id !== "string" || !/^[0-9a-f-]{36}$/i.test(id))) {
+      return json(res, 400, { error: "Liste de commandes invalide." });
+    }
+    try {
+      const filter = "orders?id=in.(" + ids.map(encodeURIComponent).join(",") + ")&dsers_exported_at=is.null&payment_status=eq.paid&refunded_amount=eq.0";
+      const marked = await db(filter, { method: "PATCH", body: JSON.stringify({ dsers_exported_at: new Date().toISOString() }) });
+      const rows = await marked.json();
+      if (!marked.ok || !Array.isArray(rows) || rows.length !== ids.length) return json(res, 409, { error: "Certaines commandes n’ont pas pu être confirmées comme exportées. Actualisez la liste." });
+      return json(res, 200, { marked: rows.length });
+    } catch (error) {
+      console.error("DSers export confirmation error:", error && error.message);
+      return json(res, 500, { error: "Confirmation d’export impossible." });
+    }
+  }
   try {
     const response = await db("orders?select=id,created_at,customer_phone,shipping_address,items,payment_status,fulfillment_status,dsers_exported_at&payment_status=eq.paid&dsers_exported_at=is.null&fulfillment_status=neq.remboursée&order=created_at.asc&limit=200");
     const orders = await response.json();
@@ -65,18 +81,9 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    const ids = orders.map(order => order.id);
-    const filter = "orders?id=in.(" + ids.map(encodeURIComponent).join(",") + ")&dsers_exported_at=is.null&payment_status=eq.paid";
-    const mark = await db(filter, {
-      method: "PATCH",
-      body: JSON.stringify({ dsers_exported_at: new Date().toISOString() })
-    });
-    const marked = await mark.json();
-    if (!mark.ok || !Array.isArray(marked) || marked.length !== orders.length) {
-      return json(res, 409, { error: "L’export a été interrompu pour éviter un doublon. Actualisez les commandes avant de réessayer." });
-    }
-
     const content = "\uFEFF" + rows.map(row => row.map(csv).join(",")).join("\r\n");
+    res.setHeader("X-TAW-Export-Order-Ids", orders.map(order => order.id).join(","));
+    res.setHeader("Access-Control-Expose-Headers", "X-TAW-Export-Order-Ids");
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", 'attachment; filename="TAWco_commandes_DSerS.csv"');
     return res.status(200).send(content);
