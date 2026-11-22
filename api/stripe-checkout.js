@@ -51,6 +51,7 @@ module.exports = async function handler(req, res) {
         price_data: { currency: "eur", unit_amount: item.unit_amount, product_data: { name: item.name } }
       })),
       shipping_address_collection: { allowed_countries: ["FR"] },
+      phone_number_collection: { enabled: true },
       billing_address_collection: "auto",
       metadata: { order_source: "TAW.co", order_items: orderItems.map(item => `${item.id}:${item.quantity}`).join(",") },
       payment_intent_data: { metadata: { order_source: "TAW.co" } },
