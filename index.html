@@ -123,6 +123,15 @@
 .variant-panel select{width:100%;padding:10px;border:1px solid var(--line);border-radius:4px;background:#f7f8f5}
 @media(max-width:900px){.detail-product-layout{grid-template-columns:minmax(230px,1fr) minmax(260px,1fr)}.detail-order-panel{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}.detail-order-panel .button{align-self:end}}
 @media(max-width:620px){.detail-panel{padding:14px}.detail-product-layout{grid-template-columns:1fr;gap:16px}.detail-gallery{grid-template-columns:48px minmax(0,1fr);position:static}.detail-thumb{width:46px;height:52px}.detail-main-image{height:300px}.detail-order-panel{grid-column:auto;display:block}.detail-product-title{font-size:19px}.detail-price{font-size:25px}.detail-tabs{gap:14px}}
+
+.detail-thumb{cursor:pointer}
+.detail-thumb:hover{border-color:var(--green)}
+.detail-quantity .qty-stepper{display:flex;align-items:center;gap:10px;margin-left:auto}
+.detail-quantity .qty-stepper button{width:30px;height:30px;border:1px solid var(--line);background:#fff;border-radius:4px;font-size:17px}
+.detail-quantity .qty-stepper span{min-width:18px;text-align:center;font-weight:800}
+.detail-tabs button{border:0;background:transparent;padding:0 0 9px;font:inherit;color:inherit;cursor:pointer;border-bottom:2px solid transparent}
+.detail-tabs button.active{color:var(--green);border-color:var(--green)}
+.detail-tab-content[hidden]{display:none}
 </style></head><body>
 <div id="orderSuccess" role="status" aria-live="polite" style="display:none;margin:16px auto;padding:18px 22px;max-width:1100px;border:1px solid #9bd4b5;border-radius:14px;background:#effaf3;color:#145c3b;font-weight:700;font-size:18px">✓ Commande validée ! Votre paiement a bien été confirmé. Merci pour votre commande chez TAW.co.</div>
 <div class="bar">✨ TAW.co — Vos trouvailles maison, mode & accessoires</div>
@@ -162,12 +171,28 @@ function sanitizeCart(value){const clean={};if(!value||typeof value!=="object"||
 function save(){cart=sanitizeCart(cart);try{localStorage.setItem("taw-cart",JSON.stringify(cart))}catch(e){}}
 function update(){const items=products.filter(p=>cart[p.id]);if(el("count"))el("count").textContent="("+Object.values(cart).reduce((a,b)=>a+b,0)+")";el("cartlist").innerHTML=items.map(p=>'<div class="line"><div><b>'+p.emoji+" "+p.name+'</b><div class="muted">'+euro(p.price)+' l’unité</div></div><div class="qty"><button onclick="change('+p.id+',-1)" aria-label="Retirer un article">−</button><span>'+cart[p.id]+'</span><button onclick="change('+p.id+',1)" aria-label="Ajouter un article">+</button></div></div>').join("")||"<p class='muted'>Votre panier est vide.</p>";el("total").textContent=euro(items.reduce((s,p)=>s+p.price*cart[p.id],0))}
 async function startTestCheckout(){const items=products.filter(p=>cart[p.id]);if(!items.length){toast("Ajoutez un article au panier");return}const email=el("buyerEmail").value.trim(),box=el("checkoutMessage");box.style.display="block";if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){box.textContent="Saisissez une adresse e-mail valide.";return}const button=el("checkoutForm").querySelector("button.primary");button.disabled=true;button.textContent="Redirection vers Stripe…";box.textContent="Préparation du paiement sécurisé…";try{const response=await fetch("/api/stripe-checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:items.map(p=>({id:p.id,quantity:cart[p.id]})),email})});const data=await response.json();if(!response.ok||!data.url)throw new Error(data.error||"Le paiement n’est pas encore configuré.");window.location.assign(data.url)}catch(error){box.textContent=error.message||"Impossible de démarrer le paiement.";button.disabled=false;button.textContent="Payer avec Stripe"}}
-let currentZoom=1;function openZoom(){const image=el("detailContent").querySelector(".detail-main-image");if(!image||!image.src)return;el("zoomImage").src=image.src;el("zoomImage").alt=image.alt;currentZoom=1;applyZoom();el("zoomShade").classList.add("open")}function closeZoom(){el("zoomShade").classList.remove("open");currentZoom=1}function applyZoom(){el("zoomImage").style.transform="scale("+currentZoom+")";el("zoomImage").style.cursor=currentZoom>1?"zoom-out":"zoom-in"}function changeZoom(delta){currentZoom=Math.max(1,Math.min(4,currentZoom+delta));applyZoom()}function resetZoom(){currentZoom=1;applyZoom()}function toggleZoom(){currentZoom=currentZoom>1?1:2;applyZoom()}document.addEventListener("wheel",function(event){if(!el("zoomShade")?.classList.contains("open"))return;event.preventDefault();changeZoom(event.deltaY<0?0.2:-0.2)},{passive:false});function openProduct(id,updateUrl=true){
+let currentZoom=1;function openZoom(){const image=el("detailContent").querySelector(".detail-main-image");if(!image||!image.src)return;el("zoomImage").src=image.src;el("zoomImage").alt=image.alt;currentZoom=1;applyZoom();el("zoomShade").classList.add("open")}function closeZoom(){el("zoomShade").classList.remove("open");currentZoom=1}function applyZoom(){el("zoomImage").style.transform="scale("+currentZoom+")";el("zoomImage").style.cursor=currentZoom>1?"zoom-out":"zoom-in"}function changeZoom(delta){currentZoom=Math.max(1,Math.min(4,currentZoom+delta));applyZoom()}function resetZoom(){currentZoom=1;applyZoom()}function toggleZoom(){currentZoom=currentZoom>1?1:2;applyZoom()}document.addEventListener("wheel",function(event){if(!el("zoomShade")?.classList.contains("open"))return;event.preventDefault();changeZoom(event.deltaY<0?0.2:-0.2)},{passive:false});let detailQuantity=1;
+function setDetailTab(tab){
+ document.querySelectorAll(".detail-tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
+ document.querySelectorAll(".detail-tab-content").forEach(s=>s.hidden=s.dataset.panel!==tab);
+}
+function changeDetailQuantity(delta){
+ detailQuantity=Math.max(1,Math.min(20,detailQuantity+delta));
+ const node=el("detailQty");if(node)node.textContent=detailQuantity;
+}
+function setDetailImage(src,button){
+ const image=el("detailMainImage");if(!image)return;image.src=src;
+ document.querySelectorAll(".detail-thumb").forEach(b=>b.classList.toggle("active",b===button));
+}
+function openProduct(id,updateUrl=true){
  const p=products.find(x=>x.id===Number(id));if(!p)return;
+ detailQuantity=1;
  const apparel=[6,7,8].includes(p.id),shoes=p.id===9,ref="TAW-"+String(p.id).padStart(3,"0");
  const variantUI=apparel||shoes?'<div class="detail-option-title">Taille '+(shoes?'(pointure EU)':'')+'</div><div class="detail-option-placeholder">Tailles et variantes exactes en cours de vérification auprès du fournisseur. Sélection indisponible pour le moment.</div>':'<div class="detail-option-title">Options du produit</div><div class="detail-option-placeholder">Les options exactes seront affichées après vérification de la fiche fournisseur.</div>';
+ const gallery=Array.isArray(p.gallery)&&p.gallery.length?p.gallery:[p.image];
+ const thumbs=gallery.map((src,i)=>'<button class="detail-thumb '+(i===0?'active':'')+'" type="button" aria-label="Afficher la photo '+(i+1)+'" onclick="setDetailImage(\''+src.replace(/'/g,"\\'")+'\',this)"><img src="'+src+'" alt=""></button>').join("");
  el("detailContent").innerHTML=`<div class="detail-product-layout">
-  <div class="detail-gallery"><div class="detail-thumbs"><button class="detail-thumb active" type="button" aria-label="Photo principale"><img src="${p.image}" alt=""></button></div><img class="detail-main-image" id="detailMainImage" src="${p.image}" alt="${p.name.replace(/"/g,"&quot;")}" onclick="openZoom()" title="Cliquer pour agrandir" onerror="this.style.display='none'"></div>
+  <div class="detail-gallery"><div class="detail-thumbs">${thumbs}</div><img class="detail-main-image" id="detailMainImage" src="${gallery[0]}" alt="${p.name.replace(/"/g,"&quot;")}" onclick="openZoom()" title="Cliquer pour agrandir"></div>
   <div class="detail-buy-panel">
    <div class="detail-brand">TAW.co · ${p.category}</div><h2 class="detail-product-title" id="detailTitle">${p.name}</h2>
    <div class="detail-rating-placeholder">Référence produit : ${ref}</div>
@@ -180,14 +205,16 @@ let currentZoom=1;function openZoom(){const image=el("detailContent").querySelec
    <div><div class="detail-order-label">Prix TAW.co</div><div class="detail-order-price">${euro(p.price)}</div></div>
    <div class="detail-delivery"><strong>Livraison</strong><br>Délais et frais confirmés avant ouverture des commandes.</div>
    <div class="detail-stock">Disponibilité fournisseur à confirmer</div>
-   <div class="detail-quantity"><span>Quantité</span><span>1</span></div>
+   <div class="detail-quantity"><span>Quantité</span><span class="qty-stepper"><button type="button" aria-label="Diminuer la quantité" onclick="changeDetailQuantity(-1)">−</button><span id="detailQty">1</span><button type="button" aria-label="Augmenter la quantité" onclick="changeDetailQuantity(1)">+</button></span></div>
    <button class="button primary" type="button" disabled aria-disabled="true">Bientôt disponible</button>
    <button class="button outline" type="button" disabled aria-disabled="true">Ajouter au panier</button>
    <p style="font-size:10px;line-height:1.5;color:var(--muted);margin-top:9px">La commande sera activée après vérification des variantes, du stock et de la livraison.</p>
   </aside>
  </div>
- <nav class="detail-tabs" aria-label="Informations produit"><span>Aperçu</span><span>Détails</span><span>Description</span><span>Livraison</span></nav>
- <section class="detail-tab-content"><h3>Description du produit</h3><p>${p.desc}</p><p>Référence : ${ref}. Les informations techniques complémentaires seront ajoutées après vérification de la fiche fournisseur correspondante.</p></section>`;
+ <nav class="detail-tabs" aria-label="Informations produit"><button type="button" class="active" data-tab="description" onclick="setDetailTab('description')">Description</button><button type="button" data-tab="details" onclick="setDetailTab('details')">Détails du produit</button><button type="button" data-tab="delivery" onclick="setDetailTab('delivery')">Livraison</button></nav>
+ <section class="detail-tab-content" data-panel="description"><h3>Description du produit</h3><p>${p.desc}</p></section>
+ <section class="detail-tab-content" data-panel="details" hidden><h3>Caractéristiques</h3><p>Référence TAW : ${ref}. Les caractéristiques techniques, dimensions, matières et options seront ajoutées après vérification de la fiche fournisseur.</p></section>
+ <section class="detail-tab-content" data-panel="delivery" hidden><h3>Livraison et disponibilité</h3><p>Les délais, frais et disponibilités seront confirmés avant l'ouverture des commandes. Aucune date de livraison n'est annoncée sans confirmation du fournisseur.</p></section>`;
  el("detailShade").classList.add("open");document.body.style.overflow="hidden";
  if(updateUrl){const url=new URL(window.location.href);url.searchParams.set("produit",p.id);history.pushState({productId:p.id},"",url)}
 }
