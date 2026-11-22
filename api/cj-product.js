@@ -6,10 +6,8 @@ module.exports=async function(req,res){
  const pid=String(req.query?.pid||"").trim();
  if(!/^[A-Za-z0-9-]{8,80}$/.test(pid))return res.status(400).json({error:"Identifiant produit CJ invalide."});
  try{
-  const [detail,variantData]=await Promise.all([
-   cj("/product/productDetail/query","POST",{id:pid}),
-   cj("/product/variant/query?pid="+encodeURIComponent(pid))
-  ]);
+  const detail=await cj("/product/productDetail/query","POST",{id:pid});
+  const variantData=await cj("/product/variant/query?pid="+encodeURIComponent(pid));
   const d=detail?.product||detail||{};
   const variants=Array.isArray(variantData)?variantData:(Array.isArray(variantData?.list)?variantData.list:[]);
   const productVariants=Array.isArray(d.variants)?d.variants:[];
