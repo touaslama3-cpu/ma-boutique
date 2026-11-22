@@ -38,12 +38,28 @@ module.exports = async function handler(req, res) {
     const quantities = new Map();
     for (const item of items) {
       const id = Number(item && item.id), quantity = Number(item && item.quantity);
-      if (!CATALOG[id] || !Number.isInteger(quantity) || quantity < 1 || quantity > 20) return res.status(400).json({ error: "Un article du panier est invalide." });
-      quantities.set(id, (quantities.get(id) || 0) + quantity);
+      const variantKey = String(item && item.variant_key || "").trim().toLowerCase();
+      if (!CATALOG[id] || !Number.isInteger(quantity) || quantity < 1 || quantity > 20 ||
+          !/^[a-z0-9-]{1,100}$/.test(variantKey)) {
+        return res.status(400).json({ error: "Chaque article doit inclure une variante vérifiée." });
+      }
+      const key = id + ":" + variantKey;
+      quantities.set(key, (quantities.get(key) || 0) + quantity);
     }
     if ([...quantities.values()].some(q => q > 20)) return res.status(400).json({ error: "Quantité maximale dépassée." });
-    const orderItems = [...quantities.entries()].map(([id, quantity]) => ({
-      id, name: CATALOG[id].name, quantity, unit_amount: CATALOG[id].amount
+    const supabaseUrl = process.env.SUPABASE_URL, serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !serviceKey) return res.status(503).json({ error: "Validation des variantes indisponible." });
+    const orderItems = await Promise.all([...quantities.entries()].map(async ([key, quantity]) => {
+      const [idText, variantKey] = key.split(":");
+      const id = Number(idText);
+      const url = supabaseUrl + "/rest/v1/supplier_variant_mappings?select=store_product_id,variant_key,cj_variant_id&store_product_id=eq." +
+        id + "&variant_key=eq." + encodeURIComponent(variantKey) + "&is_active=eq.true&limit=2";
+      const response = await fetch(url, { headers: { apikey: serviceKey, Authorization: "Bearer " + serviceKey } });
+      const rows = await response.json().catch(() => []);
+      if (!response.ok || !Array.isArray(rows) || rows.length !== 1 || !rows[0].cj_variant_id) {
+        throw Object.assign(new Error("VARIANT_NOT_VERIFIED"), { statusCode: 409 });
+      }
+      return { id, variant_key: variantKey, name: CATALOG[id].name, quantity, unit_amount: CATALOG[id].amount };
     }));
     const stripe = new Stripe(secret);
     const session = await stripe.checkout.sessions.create({
@@ -57,13 +73,14 @@ module.exports = async function handler(req, res) {
       shipping_address_collection: { allowed_countries: ["FR"] },
       phone_number_collection: { enabled: true },
       billing_address_collection: "auto",
-      metadata: { order_source: "TAW.co", order_items: orderItems.map(item => `${item.id}:${item.quantity}`).join(",") },
+      metadata: { order_source: "TAW.co", order_items: orderItems.map(item => `${item.id}:${item.quantity}:${item.variant_key}`).join(",") },
       payment_intent_data: { metadata: { order_source: "TAW.co" } },
       success_url: siteUrl + "/?payment=success&session_id={CHECKOUT_SESSION_ID}",
       cancel_url: siteUrl + "/?payment=cancelled"
     });
     return res.status(200).json({ url: session.url });
   } catch (error) {
+    if (error && error.statusCode === 409) return res.status(409).json({ error: "Une variante du panier n’est plus validée. Actualisez la boutique avant de continuer." });
     console.error("Stripe Checkout error:", error && error.message);
     return res.status(502).json({ error: "Impossible de créer la session de paiement. Réessayez plus tard." });
   }
