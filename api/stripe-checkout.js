@@ -1,19 +1,13 @@
 const Stripe = require("stripe");
 
+// Catalogue TAW actuel. Le paiement reste bloqué tant que
+// TAWCO_CHECKOUT_ENABLED n'est pas explicitement défini à "true".
 const CATALOG = {
-  1: { name: "Organisateur de câbles adhésif", amount: 1290 },
-  2: { name: "Support mural balais et serpillières", amount: 1790 },
-  3: { name: "Filtre anti-cheveux pour douche", amount: 1290 },
-  4: { name: "Sac de rangement transparent pour décorations", amount: 1690 },
-  5: { name: "Crochets muraux adhésifs", amount: 990 },
-  6: { name: "T-shirt essentiel homme", amount: 1990 },
-  7: { name: "Sweat à capuche homme", amount: 3490 },
-  8: { name: "Polo homme classique", amount: 2790 },
-  9: { name: "Baskets urbaines", amount: 4490 },
-  10: { name: "Montre connectée style sport", amount: 3990 },
-  11: { name: "Lunettes de soleil polarisées sport", amount: 1890 },
-  12: { name: "Portefeuille compact avec RFID", amount: 2290 },
-  13: { name: "Sac à dos quotidien", amount: 3290 }
+  1: { name: "Organisateur de câbles magnétique", amount: 1490 },
+  2: { name: "Organisateur sous évier à deux niveaux", amount: 2990 },
+  3: { name: "Filtre de bonde anti-cheveux", amount: 1290 },
+  9: { name: "Organisateurs de valise – lot de voyage", amount: 2490 },
+  10: { name: "Organisateur pliable de coffre", amount: 2990 }
 };
 
 module.exports = async function handler(req, res) {
@@ -29,7 +23,7 @@ module.exports = async function handler(req, res) {
   }
   try {
     const { items, email } = req.body || {};
-    if (!Array.isArray(items) || items.length < 1 || items.length > 13) return res.status(400).json({ error: "Panier invalide." });
+    if (!Array.isArray(items) || items.length < 1 || items.length > 5) return res.status(400).json({ error: "Panier invalide." });
     if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return res.status(400).json({ error: "Adresse e-mail invalide." });
     const quantities = new Map();
     for (const item of items) {
