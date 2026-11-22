@@ -51,7 +51,7 @@ function parseOrderItems(raw) {
   const seen = new Set();
   const items = [];
   for (const part of parts) {
-    const match = /^(\d{1,2}):(\d{1,2})$/.exec(part);
+    const match = /^(\d{3}):(\d{1,2})$/.exec(part);
     if (!match) return [];
     const id = Number(match[1]), quantity = Number(match[2]), product = CATALOG[id];
     if (!product || !Number.isInteger(quantity) || quantity < 1 || quantity > 20 || seen.has(id)) return [];
