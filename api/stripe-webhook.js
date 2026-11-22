@@ -45,7 +45,7 @@ function escapeHtml(value) {
   }[char]));
 }
 function parseOrderItems(raw) {
-  if (typeof raw !== "string" || !raw || raw.length > 200) return [];
+  if (typeof raw !== "string" || !raw || raw.length > 500) return [];
   const parts = raw.split(",");
   if (!parts.length || parts.length > 15) return [];
   const seen = new Set();
