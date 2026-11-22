@@ -256,3 +256,5 @@ grant select, insert, update, delete on public.supplier_variant_mappings to serv
 drop policy if exists "Service role manages supplier mappings" on public.supplier_variant_mappings;
 create policy "Service role manages supplier mappings" on public.supplier_variant_mappings
   for all to service_role using (true) with check (true);
+
+create index if not exists product_reviews_order_id_idx on public.product_reviews(order_id);
