@@ -38,7 +38,7 @@ async function sendStatusEmail(order) {
   const tracking = safeTrackingUrl
     ? '<p>Suivi : <a href="' + escapeHtml(safeTrackingUrl) + '">' + escapeHtml(order.tracking_number || "Suivre mon colis") + '</a></p>'
     : order.tracking_number ? "<p>Numéro de suivi : " + escapeHtml(order.tracking_number) + "</p>" : "";
-  await fetch("https://api.resend.com/emails", {
+  const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -48,6 +48,7 @@ async function sendStatusEmail(order) {
       html: "<p>Bonjour " + escapeHtml(order.customer_name || "client") + ",</p><p>Le statut de votre commande est maintenant : <strong>" + escapeHtml(status) + "</strong>.</p>" + tracking + "<p>Merci pour votre confiance — TAW.co</p>"
     })
   });
+  if (!response.ok) throw new Error("Resend returned HTTP " + response.status);
 }
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
@@ -93,10 +94,14 @@ module.exports = async function handler(req, res) {
         patch.tracking_url = "";
       }
     }
-    const response = await db("orders?id=eq." + encodeURIComponent(body.id) + "&select=*",
-      { method: "PATCH", body: JSON.stringify(patch) });
+    // Re-check the financial state atomically in the UPDATE filter: a refund
+    // webhook may arrive after the earlier read but before this PATCH.
+    const updateFilter = "orders?id=eq." + encodeURIComponent(body.id) +
+      "&payment_status=neq.refunded&fulfillment_status=neq." + encodeURIComponent("remboursée") + "&select=*";
+    const response = await db(updateFilter, { method: "PATCH", body: JSON.stringify(patch) });
     const rows = await response.json();
-    if (!response.ok || !rows.length) return json(res, 404, { error: "Commande introuvable ou mise à jour impossible." });
+    if (!response.ok) return json(res, 502, { error: "Mise à jour de la commande impossible." });
+    if (!rows.length) return json(res, 409, { error: "La commande est introuvable ou vient d’être remboursée. Actualisez la liste." });
     await sendStatusEmail(rows[0]).catch(error => console.error("Order email failed:", error.message));
     return json(res, 200, { order: rows[0] });
   } catch (error) {
