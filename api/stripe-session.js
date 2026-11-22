@@ -16,15 +16,12 @@ module.exports = async function handler(req, res) {
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    if (session.mode !== "payment" || session.payment_status !== "paid") {
+    if (session.mode !== "payment" || session.payment_status !== "paid" || session.metadata?.order_source !== "TAW.co") {
       return res.status(200).json({ paid: false });
     }
-    return res.status(200).json({
-      paid: true,
-      email: session.customer_details && session.customer_details.email
-        ? session.customer_details.email
-        : session.customer_email || null
-    });
+    // The storefront only needs a paid/not-paid result. Never expose customer
+    // email or other Checkout session details through this public endpoint.
+    return res.status(200).json({ paid: true });
   } catch (error) {
     console.error("Stripe session verification error:", error && error.message);
     return res.status(500).json({ paid: false, error: "Impossible de vérifier le paiement." });
