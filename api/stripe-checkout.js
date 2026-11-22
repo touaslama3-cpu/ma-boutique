@@ -19,6 +19,9 @@ const CATALOG = {
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") { res.setHeader("Allow", "POST"); return res.status(405).json({ error: "Méthode non autorisée." }); }
+  if (process.env.TAWCO_CHECKOUT_ENABLED !== "true") {
+    return res.status(503).json({ error: "Le paiement en ligne sera ouvert après validation finale de la boutique." });
+  }
   const secret = process.env.STRIPE_SECRET_KEY;
   const siteUrl = process.env.SITE_URL;
   if (!secret || !siteUrl || !/^https:\/\/[a-z0-9.-]+$/i.test(siteUrl)) {
