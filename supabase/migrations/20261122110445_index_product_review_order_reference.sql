@@ -1,0 +1,1 @@
+create index if not exists product_reviews_order_id_idx on public.product_reviews(order_id);
