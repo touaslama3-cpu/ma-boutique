@@ -170,6 +170,9 @@
 .detail-tab-content p{font-size:13px;line-height:1.8;color:var(--muted)}
 @media(max-width:900px){.detail-product-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.detail-order-panel{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center}.detail-order-panel>.button{grid-column:span 1}}
 @media(max-width:620px){.detail-shade{padding:8px}.detail-panel{padding:15px;max-height:96vh}.detail-product-layout{grid-template-columns:1fr;gap:14px}.detail-gallery{position:static;grid-template-columns:52px minmax(0,1fr)}.detail-thumbs{gap:6px}.detail-thumb{width:48px;height:56px}.detail-main-image{height:300px}.detail-order-panel{grid-column:auto;grid-template-columns:1fr}.detail-order-panel>.button{grid-column:auto}.detail-panel .detail-product-title{font-size:20px}.detail-price{font-size:29px}.detail-tabs{gap:18px}}
+
+/* Variantes vérifiées sur la fiche fournisseur du polo Maroc 2026 */
+.variant-group{margin:16px 0}.variant-heading{font-size:13px;font-weight:850;margin-bottom:9px}.variant-list{display:flex;gap:8px;flex-wrap:wrap}.variant-chip{min-height:38px;padding:8px 12px;border:1px solid #cfd5d0;background:#fff;border-radius:3px;font-size:12px;cursor:pointer}.variant-chip.active{border:2px solid var(--deep);padding:7px 11px;font-weight:850}.variant-chip:focus-visible{outline:2px solid var(--green);outline-offset:2px}.variant-help{font-size:11px;color:var(--muted);line-height:1.55;margin-top:8px}.delivery-facts{font-size:12px;line-height:1.7;padding:12px;background:#f4f7f3;border:1px solid #e1e9e0}.detail-order-panel .delivery-facts b{color:var(--deep)}
 </style></head><body>
 <div id="orderSuccess" role="status" aria-live="polite" style="display:none;margin:16px auto;padding:18px 22px;max-width:1100px;border:1px solid #9bd4b5;border-radius:14px;background:#effaf3;color:#145c3b;font-weight:700;font-size:18px">✓ Commande validée ! Votre paiement a bien été confirmé. Merci pour votre commande chez TAW.co.</div>
 <div class="bar">✨ TAW.co — Vos trouvailles maison, mode & accessoires</div>
@@ -191,7 +194,7 @@ const products=[
 {id:5,name:"Crochets muraux adhésifs",category:"Maison",price:9.90,emoji:"🪝",desc:"Gardez vos petits accessoires à portée de main et libérez de l’espace en les suspendant au mur. Idéal pour organiser les objets du quotidien.",tag:"Petit prix",image:"product-05.jpg"},
 {id:6,name:"T-shirt essentiel homme",category:"Vêtements homme",price:19.90,emoji:"👕",desc:"Un essentiel facile à associer : ce T-shirt accompagne vos tenues décontractées, avec un style simple pour tous les jours.",tag:"Essentiel",image:"product-06.jpg"},
 {id:7,name:"Sweat à capuche homme",category:"Vêtements homme",price:34.90,emoji:"🧥",desc:"Adoptez un look décontracté avec ce sweat à capuche, facile à porter lors de vos sorties ou pendant vos moments de détente.",tag:"Confort",image:"product-07.jpg"},
-{id:8,name:"Polo homme classique",category:"Vêtements homme",price:27.90,emoji:"👕",desc:"Un polo aux couleurs et motifs inspirés du Maroc, avec col boutonné et détails décoratifs. Vérifiez les tailles et les finitions sur la fiche vendeur.",tag:"Classique",image:"product-08.jpg"},
+{id:8,name:"Polo Maroc 2026 — édition supporters",category:"Vêtements homme",price:27.90,emoji:"👕",desc:"Polo de football marocain 2026 à imprimé 3D, coupe annoncée confortable et respirante, avec col et détails décoratifs. Modèle présenté pour homme et femme.",tag:"Édition 2026",image:"product-08.jpg",supplierItemId:"1005012625768394"},
 {id:9,name:"Baskets urbaines",category:"Vêtements homme",price:44.90,emoji:"👟",desc:"Un style sportif pour accompagner vos tenues de tous les jours, en ville comme pendant vos sorties.",tag:"Style",image:"product-09.jpg"},
 {id:10,name:"Montre connectée style sport",category:"Accessoires homme",price:39.90,emoji:"⌚",desc:"Une montre au cadran rectangulaire et au bracelet noir, dans un style connecté et sportif. Vérifiez les fonctions réellement compatibles sur la fiche vendeur.",tag:"Accessoire",image:"product-10.jpg"},
 {id:11,name:"Lunettes de soleil polarisées sport",category:"Accessoires homme",price:18.90,emoji:"🕶️",desc:"Des lunettes de soleil au style sportif avec verres présentés comme polarisés par le vendeur. Vérifiez les caractéristiques et la protection UV sur la fiche produit.",tag:"Accessoire",image:"product-11.jpg"},
@@ -222,42 +225,54 @@ function setDetailImage(src,button){
  const image=el("detailMainImage");if(!image)return;image.src=src;
  document.querySelectorAll(".detail-thumb").forEach(b=>b.classList.toggle("active",b===button));
 }
+let selectedPoloColor="Blanc ivoire",selectedPoloSize="M (US 38)";
+function choosePoloVariant(kind,value){
+ if(kind==="color")selectedPoloColor=value;else selectedPoloSize=value;
+ document.querySelectorAll('[data-variant-kind="'+kind+'"]').forEach(b=>b.classList.toggle("active",b.dataset.variantValue===value));
+ const summary=el("poloVariantSummary");if(summary)summary.textContent="Sélection : "+selectedPoloColor+" · "+selectedPoloSize;
+}
 function openProduct(id,updateUrl=true){
  const p=products.find(x=>x.id===Number(id));if(!p)return;
  detailQuantity=1;
- const apparel=[6,7,8].includes(p.id),shoes=p.id===9;
+ const isPolo=p.id===8,apparel=[6,7,8].includes(p.id),shoes=p.id===9;
  const ref="TAW-"+String(p.id).padStart(3,"0");
+ const sizes=["S (US 36)","M (US 38)","L (US 40)","XL (US 42)","XXL (US 44)","XXXL (US 46-48)","4XL (US 50)","5XL (US 52)","6XL (US 54-56)"];
+ const colors=["Rouge","Blanc ivoire"];
+ if(isPolo){selectedPoloColor="Blanc ivoire";selectedPoloSize="M (US 38)"}
  const optionTitle=apparel?"Taille du vêtement":shoes?"Pointure":"Options et dimensions";
- const optionText=apparel||shoes
-  ?"Les tailles et pointures réellement disponibles sont en cours de vérification. Elles seront affichées ici dès confirmation du fournisseur."
-  :"Les dimensions, coloris et déclinaisons exacts seront affichés ici après vérification du produit.";
+ const optionText=apparel||shoes?"Les tailles et pointures exactes restent à confirmer pour ce produit.":"Les dimensions, coloris et déclinaisons exacts seront affichés ici après vérification du produit.";
  const gallery=Array.isArray(p.gallery)&&p.gallery.length?p.gallery:[p.image];
  const thumbs=gallery.map((src,i)=>'<button class="detail-thumb '+(i===0?'active':'')+'" type="button" aria-label="Afficher la photo '+(i+1)+'" onclick="setDetailImage(\''+src.replace(/'/g,"\\'")+'\',this)"><img src="'+src+'" alt=""></button>').join("");
+ const variantBlock=isPolo
+ ?'<div class="variant-group"><div class="variant-heading">Couleur : 2</div><div class="variant-list">'+colors.map(v=>'<button type="button" class="variant-chip '+(v===selectedPoloColor?'active':'')+'" data-variant-kind="color" data-variant-value="'+v+'" onclick="choosePoloVariant(\'color\',\''+v+'\')">'+v+'</button>').join("")+'</div></div><div class="variant-group"><div class="variant-heading">Taille (US) · Guide des tailles</div><div class="variant-list">'+sizes.map(v=>'<button type="button" class="variant-chip '+(v===selectedPoloSize?'active':'')+'" data-variant-kind="size" data-variant-value="'+v+'" onclick="choosePoloVariant(\'size\',\''+v+'\')">'+v+'</button>').join("")+'</div><div class="variant-help">Choisissez la taille selon le guide du vendeur. Les mesures affichées ci-dessous sont celles de l’article et non les mesures du corps.</div></div><div class="detail-measurements">Mesures de l’article : tour de poitrine 43,31″ · longueur 27,95″ · longueur des manches 9,06″ · largeur des épaules 17,72″</div><div class="variant-help" id="poloVariantSummary">Sélection : Blanc ivoire · M (US 38)</div>'
+ :'<div class="detail-option-title">'+optionTitle+'</div><div class="detail-option-placeholder">'+optionText+'</div><div class="detail-measurements">Caractéristiques : '+p.desc+' Les matières, dimensions et spécifications complémentaires seront ajoutées après vérification.</div>';
+ const deliveryBlock=isPolo
+ ?'<div class="delivery-facts"><b>Livraison annoncée sur la fiche vendeur</b><br>Gratuite · estimation affichée : 29 novembre – 5 décembre 2026<br>Modes mentionnés : Colissimo, Mondial Relay et autres transporteurs<br><br><b>Retours</b><br>Retour gratuit annoncé sous 15 jours, selon les conditions applicables du vendeur.</div>'
+ :'<div class="detail-delivery"><strong>Livraison</strong><br>Frais et délai exacts à confirmer avant l’ouverture des commandes.</div>';
+ const stockText=isPolo?"998 disponibles lors de la consultation de la fiche vendeur (stock susceptible de changer).":"Stock et disponibilité en cours de confirmation";
  el("detailContent").innerHTML=`<div class="detail-product-layout">
   <div class="detail-gallery"><div class="detail-thumbs">${thumbs}</div><img class="detail-main-image" id="detailMainImage" src="${gallery[0]}" alt="${p.name.replace(/"/g,"&quot;")}" onclick="openZoom()" title="Cliquer pour agrandir"></div>
   <div class="detail-buy-panel">
    <div class="detail-brand">TAW.co · ${p.category}</div><h2 class="detail-product-title" id="detailTitle">${p.name}</h2>
-   <div class="detail-rating-placeholder">Référence TAW : ${ref}</div>
+   <div class="detail-rating-placeholder">${isPolo?"Fiche fournisseur : 4,1/5 · 16 avis · 74 ventes indiquées":"Référence TAW : "+ref}</div>
    <div class="detail-price">${euro(p.price)}</div>
-   <div class="detail-promo">Prix de vente officiel TAW.co · Prix affiché en euros TTC</div>
-   <div class="detail-option-title">${optionTitle}</div>
-   <div class="detail-option-placeholder">${optionText}</div>
-   <div class="detail-measurements">Caractéristiques : ${p.desc} Les matières, dimensions et spécifications complémentaires seront ajoutées après vérification.</div>
+   <div class="detail-promo">Prix de vente TAW.co · Prix affiché en euros TTC</div>
+   ${variantBlock}
   </div>
   <aside class="detail-order-panel">
    <div><div class="detail-order-label">Vendu par</div><div class="detail-order-price">TAW.co</div><div style="font-size:11px;color:var(--muted)">${euro(p.price)}</div></div>
-   <div class="detail-delivery"><strong>Livraison</strong><br>Frais et délai exacts à confirmer avant l'ouverture des commandes. Ils seront indiqués clairement avant paiement.</div>
-   <div class="detail-stock">Stock et disponibilité en cours de confirmation</div>
+   ${deliveryBlock}
+   <div class="detail-stock">${stockText}</div>
    <div class="detail-quantity"><span>Quantité</span><span class="qty-stepper"><button type="button" aria-label="Diminuer la quantité" onclick="changeDetailQuantity(-1)">−</button><span id="detailQty">1</span><button type="button" aria-label="Augmenter la quantité" onclick="changeDetailQuantity(1)">+</button></span></div>
    <button class="button primary" type="button" disabled aria-disabled="true">Bientôt disponible</button>
    <button class="button outline" type="button" disabled aria-disabled="true">Ajouter au panier</button>
-   <p style="font-size:10px;line-height:1.5;color:var(--muted);margin:0">Les commandes seront activées après validation des variantes, du stock, des frais et des délais de livraison.</p>
+   <p style="font-size:10px;line-height:1.5;color:var(--muted);margin:0">Les commandes restent désactivées jusqu’à validation complète de l’approvisionnement et du parcours de livraison.</p>
   </aside>
  </div>
  <nav class="detail-tabs" aria-label="Informations produit"><button type="button" class="active" data-tab="description" onclick="setDetailTab('description')">Description</button><button type="button" data-tab="details" onclick="setDetailTab('details')">Détails du produit</button><button type="button" data-tab="delivery" onclick="setDetailTab('delivery')">Livraison et retours</button></nav>
  <section class="detail-tab-content" data-panel="description"><h3>Description du produit</h3><p>${p.desc}</p></section>
- <section class="detail-tab-content" data-panel="details" hidden><h3>Caractéristiques du produit</h3><p>Référence TAW : ${ref}. ${optionText} Les informations techniques non encore vérifiées ne sont pas inventées.</p></section>
- <section class="detail-tab-content" data-panel="delivery" hidden><h3>Livraison et retours</h3><p>Les frais, délais, transporteur et modalités de retour seront publiés avant l'ouverture des ventes, après confirmation des conditions réelles d'expédition.</p></section>`;
+ <section class="detail-tab-content" data-panel="details" hidden><h3>Caractéristiques du produit</h3><p>${isPolo?"Deux couleurs annoncées : rouge et blanc ivoire. Tailles US S (36) à 6XL (54-56). Mesures de l’article : poitrine 43,31 pouces, longueur 27,95 pouces, manches 9,06 pouces, épaules 17,72 pouces.":"Référence TAW : "+ref+". "+optionText}</p></section>
+ <section class="detail-tab-content" data-panel="delivery" hidden><h3>Livraison et retours</h3><p>${isPolo?"La fiche fournisseur consultée annonce une livraison gratuite estimée du 29 novembre au 5 décembre 2026 et un retour gratuit sous 15 jours. Ces conditions doivent être reconfirmées au moment de la commande.":"Les frais, délais, transporteur et modalités de retour seront publiés après confirmation des conditions réelles d’expédition."}</p></section>`;
  el("detailShade").classList.add("open");document.body.style.overflow="hidden";
  if(updateUrl){const url=new URL(window.location.href);url.searchParams.set("produit",p.id);history.pushState({productId:p.id},"",url)}
 }
