@@ -83,12 +83,13 @@ module.exports = async function handler(req, res) {
       const session = event.data.object;
       if (session.mode === "payment" && session.payment_status === "paid" && session.metadata?.order_source === "TAW.co") {
         const email = session.customer_details?.email || session.customer_email || "";
+        const phone = typeof session.customer_details?.phone === "string" ? session.customer_details.phone.trim() : "";
         const details = session.shipping_details || session.customer_details || {};
         const address = details.address || {};
         const items = parseOrderItems(session.metadata?.order_items || "");
         const expectedTotal = items.reduce((sum, item) => sum + item.unit_amount * item.quantity, 0);
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 ||
-            !items.length || session.currency !== "eur" || Number(session.amount_total) !== expectedTotal) {
+            !phone || phone.length > 40 || !items.length || session.currency !== "eur" || Number(session.amount_total) !== expectedTotal) {
           console.error("Rejected paid Checkout session: invalid email, catalogue items, currency or total.");
           return res.status(400).json({ received: false, error: "Données de commande invalides." });
         }
@@ -96,6 +97,7 @@ module.exports = async function handler(req, res) {
           stripe_session_id: session.id,
           stripe_payment_intent_id: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id || null,
           customer_email: email,
+          customer_phone: phone,
           customer_name: details.name || session.customer_details?.name || null,
           shipping_address: {
             line1: address.line1 || null, line2: address.line2 || null, postal_code: address.postal_code || null,
