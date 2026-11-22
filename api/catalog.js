@@ -12,7 +12,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== "GET") { res.setHeader("Allow", "GET"); return res.status(405).json({ error: "Méthode non autorisée." }); }
   if (!SUPABASE_URL || !SERVICE_KEY) return res.status(503).json({ error: "Catalogue temporairement indisponible." });
   try {
-    const response = await db("supplier_variant_mappings?select=store_product_id,variant_key,cj_product_id,cj_variant_id,cj_variant_sku&is_active=eq.true&order=store_product_id.asc,variant_key.asc");
+    const response = await db("supplier_variant_mappings?select=store_product_id,variant_key,cj_product_id,cj_variant_id,cj_variant_sku,unit_cost_usd,product_cost_eur,shipping_cost_eur,shipping_method_id,shipping_method_name,shipping_delivery_min_days,shipping_delivery_max_days,shipping_checked_at,verified_at&is_active=eq.true&order=store_product_id.asc,variant_key.asc");
     const mappings = await response.json();
     if (!response.ok) return res.status(502).json({ error: "Lecture du catalogue impossible." });
     const groups = new Map();
@@ -20,7 +20,20 @@ module.exports = async function handler(req, res) {
       const key = Number(m.store_product_id);
       if (!groups.has(key)) groups.set(key, { storeProductId: key, cjProductId: String(m.cj_product_id), variants: [] });
       if (groups.get(key).cjProductId !== String(m.cj_product_id)) continue;
-      groups.get(key).variants.push({ variantKey: String(m.variant_key), variantId: String(m.cj_variant_id), sku: String(m.cj_variant_sku || "") });
+      groups.get(key).variants.push({
+        variantKey: String(m.variant_key),
+        variantId: String(m.cj_variant_id),
+        sku: String(m.cj_variant_sku || ""),
+        supplierCostUsd: Number(m.unit_cost_usd),
+        productCostEur: m.product_cost_eur == null ? null : Number(m.product_cost_eur),
+        shippingCostEur: m.shipping_cost_eur == null ? null : Number(m.shipping_cost_eur),
+        shippingMethodId: m.shipping_method_id || null,
+        shippingMethod: m.shipping_method_name || null,
+        deliveryMinDays: m.shipping_delivery_min_days == null ? null : Number(m.shipping_delivery_min_days),
+        deliveryMaxDays: m.shipping_delivery_max_days == null ? null : Number(m.shipping_delivery_max_days),
+        shippingCheckedAt: m.shipping_checked_at || null,
+        verifiedAt: m.verified_at || null
+      });
     }
     const catalog = await Promise.all([...groups.values()].map(async group => {
       const [detail, variantData] = await Promise.all([
@@ -35,7 +48,7 @@ module.exports = async function handler(req, res) {
         const v = byId.get(m.variantId);
         if (!v) return null;
         const options = String(v.variantKey || v.childsku || "").split("-").filter(Boolean);
-        return { variantKey: m.variantKey, variantId: m.variantId, sku: m.sku, options, image: String(v.variantImage || v.img || "") };
+        return { ...m, options, image: String(v.variantImage || v.img || "") };
       }).filter(Boolean);
       const images = Array.isArray(d.productImageSet) ? d.productImageSet : (Array.isArray(d.img) ? d.img : []);
       return {
