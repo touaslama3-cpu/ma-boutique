@@ -81,10 +81,11 @@ module.exports = async function handler(req, res) {
     if (typeof body.tracking_url === "string") {
       const rawUrl = body.tracking_url.trim();
       if (rawUrl) {
+        if (rawUrl.length > 500) return json(res, 400, { error: "Le lien de suivi est trop long (500 caractères maximum)." });
         try {
           const parsedUrl = new URL(rawUrl);
-          if (parsedUrl.protocol !== "https:") return json(res, 400, { error: "Le lien de suivi doit utiliser HTTPS." });
-          patch.tracking_url = parsedUrl.toString().slice(0, 500);
+          if (parsedUrl.protocol !== "https:" || !parsedUrl.hostname || parsedUrl.username || parsedUrl.password) return json(res, 400, { error: "Le lien de suivi doit être une adresse HTTPS valide." });
+          patch.tracking_url = parsedUrl.toString();
         } catch (_) {
           return json(res, 400, { error: "Lien de suivi invalide." });
         }
