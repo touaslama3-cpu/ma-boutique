@@ -312,4 +312,68 @@ document.addEventListener("click",function(event){const button=event.target.clos
 
 async function confirmPaidOrder(){const params=new URLSearchParams(window.location.search);if(params.get("payment")==="success"){const sessionId=params.get("session_id");if(!sessionId)return;try{const response=await fetch("/api/stripe-session?session_id="+encodeURIComponent(sessionId),{cache:"no-store"});const result=await response.json();if(response.ok&&result.paid){const banner=el("orderSuccess");banner.style.display="block";banner.scrollIntoView({behavior:"smooth",block:"center"});cart={};save();update();closeCart();history.replaceState({},document.title,window.location.pathname+window.location.hash);}}catch(error){console.error("Payment confirmation check failed",error)}}else if(params.get("payment")==="cancelled"){toast("Paiement annulé. Votre panier est conservé.");history.replaceState({},document.title,window.location.pathname+window.location.hash)}}
 el("year").textContent=new Date().getFullYear();confirmPaidOrder();try{cart=sanitizeCart(JSON.parse(localStorage.getItem("taw-cart")||"{}"))}catch(e){cart={}}save();renderFilters();render();update();const initialProduct=new URLSearchParams(window.location.search).get("produit");if(initialProduct)openProduct(initialProduct,false);document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeZoom();closeCart();closeProduct();closeMenu()}});
+
+/* Catalogue CJ validé : les données publiques proviennent uniquement des variantes actives */
+let tawCJCatalog = {};
+let tawSelectedCJVariant = null;
+function tawSlug(parts){return parts.map(v=>String(v||"").trim().toLowerCase()).filter(Boolean).join("-").replace(/[^a-z0-9-]+/g,"-").replace(/-+/g,"-").replace(/^-|-$/g,"")}
+function tawEscape(value){return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+async function loadTawCJCatalog(){
+ try{
+  const response=await fetch("/api/catalog",{cache:"no-store"});
+  if(!response.ok)return;
+  const data=await response.json();
+  tawCJCatalog={};
+  (data.catalog||[]).forEach(item=>{
+   tawCJCatalog[item.storeProductId]=item;
+   const p=products.find(x=>x.id===Number(item.storeProductId));
+   if(p){
+    const images=[item.mainImage,...(item.images||[])].filter((x,i,a)=>x&&a.indexOf(x)===i);
+    if(images.length){p.image=images[0];p.gallery=images;}
+    p.cjReady=(item.variants||[]).length>0;
+   }
+  });
+  render();
+ }catch(error){console.warn("Catalogue CJ non chargé",error)}
+}
+const tawOriginalOpenProduct=openProduct;
+openProduct=function(id,updateUrl=true){
+ tawSelectedCJVariant=null;
+ tawOriginalOpenProduct(id,updateUrl);
+ const p=products.find(x=>x.id===Number(id));
+ const data=tawCJCatalog[Number(id)];
+ const placeholder=el("detailContent").querySelector(".detail-option-placeholder");
+ if(!placeholder)return;
+ if(!data||!data.variants||!data.variants.length){
+  placeholder.textContent="Les tailles, couleurs et disponibilités sont en cours de validation auprès du fournisseur.";
+  return;
+ }
+ const optionCount=Math.max(...data.variants.map(v=>(v.options||[]).length),0);
+ const optionLabels=optionCount>=2?["Couleur","Taille / pointure"]:["Option"];
+ const optionValues=Array.from({length:optionCount},(_,i)=>[...new Set(data.variants.map(v=>(v.options||[])[i]).filter(Boolean))]);
+ const selected=Array(optionCount).fill("");
+ const groups=optionValues.map((values,i)=>'<label class="cj-choice-label">'+optionLabels[i]+'<select class="field cj-choice" data-index="'+i+'"><option value="">Choisir</option>'+values.map(v=>'<option value="'+tawEscape(v)+'">'+tawEscape(v)+'</option>').join("")+'</select></label>').join("");
+ placeholder.innerHTML='<div class="cj-live-options">'+groups+'</div><div class="detail-option-placeholder cj-selection-hint">Choisissez toutes les options pour afficher la variante correspondante.</div>';
+ const hint=placeholder.querySelector(".cj-selection-hint");
+ const selectors=[...placeholder.querySelectorAll(".cj-choice")];
+ const updateVariant=()=>{
+  selected.forEach((_,i)=>selected[i]=selectors[i].value);
+  const complete=selected.every(Boolean);
+  const match=complete?data.variants.find(v=>tawSlug(v.options||[])===tawSlug(selected)):null;
+  tawSelectedCJVariant=match||null;
+  if(match){
+   hint.textContent="Variante disponible dans le catalogue CJ · "+(match.sku||"référence confirmée");
+   const image=el("detailMainImage");
+   if(image&&match.image){image.src=match.image;image.alt=p.name+" — "+selected.join(" ")}
+   const imgGallery=el("detailContent").querySelector(".detail-thumbs");
+   if(imgGallery&&match.image){imgGallery.insertAdjacentHTML("afterbegin",'<button class="detail-thumb active" type="button" aria-label="Photo de la variante sélectionnée"><img src="'+tawEscape(match.image)+'" alt=""></button>')}
+  }else{
+   hint.textContent=complete?"Cette combinaison n'est pas encore validée chez le fournisseur.":"Choisissez toutes les options pour afficher la variante correspondante.";
+   tawSelectedCJVariant=null;
+  }
+ };
+ selectors.forEach(select=>select.addEventListener("change",updateVariant));
+};
+loadTawCJCatalog();
+
 </script></body></html>
