@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Administration des commandes — TAW.co</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#17251f;background:#f7f8f5}
+*{box-sizing:border-box}body{margin:0;padding:24px}.wrap{max-width:1100px;margin:auto}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+h1{font-size:26px;margin:0 0 6px}.muted{color:#65746b;font-size:14px}
+.panel{background:white;border:1px solid #e1e7df;border-radius:14px;padding:18px;margin:18px 0}
+input,select,button{font:inherit;border:1px solid #d6ded5;border-radius:8px;padding:10px;background:white}
+button{background:#176448;color:white;border:0;cursor:pointer;font-weight:600}button:disabled{opacity:.55;cursor:wait}
+.login{display:flex;gap:10px;flex-wrap:wrap}.login input{flex:1;min-width:220px}
+#message{margin-top:10px;color:#9a4d16}.table-wrap{overflow:auto}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.stat{background:#fff;border:1px solid #e1e7df;border-radius:14px;padding:16px}.stat small{display:block;color:#65746b;font-size:12px}.stat strong{display:block;font-size:22px;margin-top:7px;color:#153d32}@media(max-width:760px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}\ntable{width:100%;border-collapse:collapse;min-width:850px}th,td{text-align:left;padding:12px;border-bottom:1px solid #edf0eb;vertical-align:top;font-size:14px}
+th{color:#65746b;font-weight:600}.items{max-width:240px}.actions{display:grid;gap:7px;min-width:190px}.actions input,.actions select{width:100%}
+.price{white-space:nowrap;font-weight:700}.status{font-weight:600}.empty{padding:28px;text-align:center;color:#65746b}
+@media(max-width:600px){body{padding:14px}h1{font-size:22px}.panel{padding:12px}}
+</style>
+</head>
+<body><main class="wrap">
+<header><div><h1>TAW.co — Commandes</h1><div class="muted">Espace privé de gestion des paiements, expéditions et suivis</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button id="export-dsers" type="button">Exporter vers DSers</button><button id="refresh">Actualiser</button></div></header>
+<section class="panel">
+<div class="login"><input id="token" type="password" autocomplete="current-password" placeholder="Jeton administrateur"><button id="connect">Accéder aux commandes</button></div>
+<div id="message" role="status"></div>
+</section>
+<section class="stats" aria-label="Indicateurs de la boutique"><article class="stat"><small>Commandes reçues</small><strong id="statOrders">—</strong></article><article class="stat"><small>Chiffre d’affaires payé</small><strong id="statRevenue">—</strong></article><article class="stat"><small>À expédier / en cours</small><strong id="statShipping">—</strong></article><article class="stat"><small>Remboursements</small><strong id="statRefunds">—</strong></article></section>
+<section class="panel"><div class="table-wrap"><table><thead><tr><th>Commande</th><th>Client</th><th>Articles</th><th>Montant / remboursement</th><th>Livraison / suivi</th><th>Enregistrer</th></tr></thead><tbody id="orders"><tr><td colspan="6" class="empty">Connectez-vous pour afficher les commandes.</td></tr></tbody></table></div></section>
+</main>
+<script>
+const $=id=>document.getElementById(id), statuses=["à préparer","en préparation","expédiée","livrée","annulée"];
+let token=sessionStorage.getItem("tawco_admin_token")||"";
+$("token").value=token;
+function node(tag,text,className){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(className)n.className=className;return n}
+function money(cents,currency){return (Number(cents||0)/100).toLocaleString("fr-FR",{style:"currency",currency:(currency||"eur").toUpperCase()})}
+function auth(){return {Authorization:"Bearer "+token}}
+function message(text){$("message").textContent=text||""}
+async function load(){
+ token=$("token").value.trim();if(!token){message("Saisissez le jeton administrateur.");return}
+ $("connect").disabled=true;$("refresh").disabled=true;message("Chargement des commandes…");
+ try{
+  const response=await fetch("/api/admin-orders",{headers:auth(),cache:"no-store"}),data=await response.json();
+  if(!response.ok)throw new Error(data.error||"Accès impossible.");
+  sessionStorage.setItem("tawco_admin_token",token);render(data.orders||[]);message((data.orders||[]).length+" commande(s) chargée(s).");
+ }catch(e){message(e.message);$("orders").replaceChildren(node("tr",undefined));renderStats([]);}
+ finally{$("connect").disabled=false;$("refresh").disabled=false}
+}
+function render(orders){
+ renderStats(orders);const body=$("orders");body.replaceChildren();
+ if(!orders.length){const tr=node("tr");const td=node("td","Aucune commande enregistrée.","empty");td.colSpan=6;tr.append(td);body.append(tr);return}
+ for(const order of orders){
+  const tr=node("tr"),date=new Date(order.created_at).toLocaleString("fr-FR");
+  const first=node("td");first.append(node("strong",order.id.slice(0,8).toUpperCase()),node("div",date,"muted"),node("div","Paiement : "+(order.payment_status||"—"),"muted"));tr.append(first);
+  const customer=node("td");customer.append(node("strong",order.customer_name||"Client"),node("div",order.customer_email||""),node("div",[order.shipping_address?.line1,order.shipping_address?.postal_code,order.shipping_address?.city].filter(Boolean).join(", "),"muted"));tr.append(customer);
+  const items=node("td",undefined,"items");for(const item of (order.items||[]))items.append(node("div",(item.quantity||1)+" × "+(item.name||"Article")));tr.append(items);
+  const amountCell=node("td",undefined,"price");amountCell.append(node("div",money(order.amount_total,order.currency)));if(Number(order.refunded_amount||0)>0)amountCell.append(node("div","Remboursé : "+money(order.refunded_amount,order.currency),"muted"));tr.append(amountCell);
+  const actions=node("td",undefined,"actions");
+  const status=document.createElement("select");for(const s of statuses){const opt=node("option",s);opt.value=s;if(s===order.fulfillment_status)opt.selected=true;status.append(opt)}if(order.payment_status==="refunded"||order.fulfillment_status==="remboursée"){status.disabled=true;status.title="Commande entièrement remboursée : statut verrouillé."}
+  const carrier=node("input");carrier.placeholder="Transporteur";carrier.value=order.carrier||"";
+  const tracking=node("input");tracking.placeholder="Numéro de suivi";tracking.value=order.tracking_number||"";
+  const url=node("input");url.placeholder="Lien de suivi https://…";url.value=order.tracking_url||"";const note=node("input");note.placeholder="Note interne / client";note.value=order.customer_note||"";
+  actions.append(status,carrier,tracking,url,note);tr.append(actions);
+  const saveCell=node("td"),save=node("button","Enregistrer");save.addEventListener("click",async()=>{
+   save.disabled=true;message("Mise à jour de la commande "+order.id.slice(0,8)+"…");
+   try{const response=await fetch("/api/admin-orders",{method:"PATCH",headers:{...auth(),"Content-Type":"application/json"},body:JSON.stringify({id:order.id,fulfillment_status:status.value,carrier:carrier.value,tracking_number:tracking.value,tracking_url:url.value,customer_note:note.value})});const data=await response.json();if(!response.ok)throw new Error(data.error||"Mise à jour impossible.");message(data.email_sent===false?"Commande enregistrée, mais l’e-mail n’a pas pu être envoyé. Vérifiez Resend et ORDER_FROM_EMAIL.":"Commande mise à jour et notification e-mail acceptée.");}
+   catch(e){message(e.message)}finally{save.disabled=false}
+  });saveCell.append(save);tr.append(saveCell);body.append(tr);
+ }
+}
+$("connect").addEventListener("click",load);$("refresh").addEventListener("click",load);
+$("export-dsers").addEventListener("click",async()=>{
+ token=$("token").value.trim();if(!token){message("Saisissez le jeton administrateur.");return}
+ const button=$("export-dsers");button.disabled=true;message("Préparation du fichier DSers…");
+ try{
+  const response=await fetch("/api/admin-dsers-export",{method:"POST",headers:auth(),cache:"no-store"});
+  if(!response.ok){const data=await response.json();throw new Error(data.error||"Export impossible.")}
+  const orderIds=(response.headers.get("X-TAW-Export-Order-Ids")||"").split(",").filter(Boolean);
+  const blob=await response.blob(),url=URL.createObjectURL(blob),link=document.createElement("a");
+  link.href=url;link.download="TAWco_commandes_DSerS.csv";document.body.append(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  if(orderIds.length){
+   const confirmResponse=await fetch("/api/admin-dsers-export",{method:"POST",headers:{...auth(),"Content-Type":"application/json"},body:JSON.stringify({action:"confirm",order_ids:orderIds}),cache:"no-store"});
+   const confirmation=await confirmResponse.json();
+   if(!confirmResponse.ok)throw new Error(confirmation.error||"CSV téléchargé, mais marquage anti-doublon non confirmé. Actualisez avant un nouvel export.");
+   message("CSV DSers téléchargé. "+confirmation.marked+" commande(s) marquée(s) comme exportée(s).");
+  }else message("Aucune commande à exporter.");
+  load();
+ }catch(e){message(e.message)}finally{button.disabled=false}
+});
+$("token").addEventListener("keydown",e=>{if(e.key==="Enter")load()});
+if(token)load();
+</script></body></html>
