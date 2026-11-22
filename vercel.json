@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/api/cj-products", "destination": "/api/cj-router?route=products" },
+    { "source": "/api/cj-product", "destination": "/api/cj-router?route=product" },
+    { "source": "/api/cj-freight", "destination": "/api/cj-router?route=freight" },
+    { "source": "/api/cj-track", "destination": "/api/cj-router?route=track" }
+  ]
+}
