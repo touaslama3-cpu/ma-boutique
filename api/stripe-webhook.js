@@ -89,7 +89,7 @@ module.exports = async function handler(req, res) {
         const items = parseOrderItems(session.metadata?.order_items || "");
         const expectedTotal = items.reduce((sum, item) => sum + item.unit_amount * item.quantity, 0);
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 ||
-            !items.length || session.currency !== "eur" || Number(session.amount_total) !== expectedTotal) {
+            !phone || phone.length > 40 || !items.length || session.currency !== "eur" || Number(session.amount_total) !== expectedTotal) {
           console.error("Rejected paid Checkout session: invalid email, catalogue items, currency or total.");
           return res.status(400).json({ received: false, error: "Données de commande invalides." });
         }
