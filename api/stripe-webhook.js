@@ -114,7 +114,8 @@ module.exports = async function handler(req, res) {
         const fullyRefunded = amount > 0 && refundedAmount >= amount;
         const patch = {
           refunded_amount: refundedAmount,
-          payment_status: fullyRefunded ? "refunded" : "partially_refunded"
+          payment_status: fullyRefunded ? "refunded" : "partially_refunded",
+          updated_at: new Date().toISOString()
         };
         if (fullyRefunded) patch.fulfillment_status = "remboursée";
         const response = await supabase("orders?stripe_payment_intent_id=eq." + encodeURIComponent(paymentIntent), {
