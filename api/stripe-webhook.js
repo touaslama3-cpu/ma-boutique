@@ -30,7 +30,7 @@ const CATALOG = {
   5: { name: "Crochets muraux adhésifs", amount: 990 },
   6: { name: "T-shirt essentiel homme", amount: 1990 },
   7: { name: "Sweat à capuche homme", amount: 3490 },
-  8: { name: "Polo Maroc homme", amount: 2790 },
+  8: { name: "Polo homme classique", amount: 2790 },
   9: { name: "Baskets urbaines", amount: 4490 },
   10: { name: "Montre connectée style sport", amount: 3990 },
   11: { name: "Lunettes de soleil polarisées sport", amount: 1890 },
@@ -96,8 +96,12 @@ module.exports = async function handler(req, res) {
         const rows = await response.json();
         if (!response.ok) { console.error("Supabase order insert failed:", response.status, rows); return res.status(503).json({ received: false }); }
         if (Array.isArray(rows) && rows.length) {
-          await sendEmail(email, "Confirmation de votre commande TAW.co",
-            "<p>Bonjour " + escapeHtml(payload.customer_name || "client") + ",</p><p>Nous avons bien reçu votre paiement et votre commande est enregistrée.</p><p>Montant : " + ((payload.amount_total / 100).toFixed(2)) + " €</p><p>Nous vous informerons dès l’expédition.</p><p>Merci pour votre confiance — TAW.co</p>");
+          try {
+            await sendEmail(email, "Confirmation de votre commande TAW.co",
+              "<p>Bonjour " + escapeHtml(payload.customer_name || "client") + ",</p><p>Nous avons bien reçu votre paiement et votre commande est enregistrée.</p><p>Montant : " + ((payload.amount_total / 100).toFixed(2)) + " €</p><p>Nous vous informerons dès l’expédition.</p><p>Merci pour votre confiance — TAW.co</p>");
+          } catch (emailError) {
+            console.error("Order confirmation email failed:", emailError && emailError.message);
+          }
         }
       }
     }
