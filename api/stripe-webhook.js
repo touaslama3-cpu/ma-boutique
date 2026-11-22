@@ -23,19 +23,21 @@ async function supabase(path, options = {}) {
   });
 }
 const CATALOG = {
-  1: { name: "Organisateur de câbles adhésif", amount: 1290 },
-  2: { name: "Support mural balais et serpillières", amount: 1790 },
-  3: { name: "Filtre anti-cheveux pour douche", amount: 1290 },
-  4: { name: "Sac de rangement transparent pour décorations", amount: 1690 },
-  5: { name: "Crochets muraux adhésifs", amount: 990 },
-  6: { name: "T-shirt essentiel homme", amount: 1990 },
-  7: { name: "Sweat à capuche homme", amount: 3490 },
-  8: { name: "Polo homme classique", amount: 2790 },
-  9: { name: "Baskets urbaines", amount: 4490 },
-  10: { name: "Montre connectée style sport", amount: 3990 },
-  11: { name: "Lunettes de soleil polarisées sport", amount: 1890 },
-  12: { name: "Portefeuille compact avec RFID", amount: 2290 },
-  13: { name: "Sac à dos quotidien", amount: 3290 }
+  101: { name: "T-shirt essentiel femme", amount: 1990 },
+  102: { name: "Chemise oversize femme", amount: 2990 },
+  103: { name: "Robe casual", amount: 3490 },
+  104: { name: "Ensemble détente femme", amount: 3990 },
+  105: { name: "Jean coupe droite femme", amount: 3490 },
+  106: { name: "T-shirt basique homme", amount: 1990 },
+  107: { name: "Sweat à capuche homme", amount: 3490 },
+  108: { name: "Chemise casual homme", amount: 3290 },
+  109: { name: "Jean homme", amount: 3990 },
+  110: { name: "Veste légère unisexe", amount: 4490 },
+  111: { name: "Baskets lifestyle", amount: 4990 },
+  112: { name: "Sneakers minimalistes", amount: 5490 },
+  113: { name: "Sac porté épaule", amount: 2990 },
+  114: { name: "Lunettes de soleil", amount: 1990 },
+  115: { name: "Casquette urbaine", amount: 1790 }
 };
 function escapeHtml(value) {
   return String(value || "").replace(/[&<>"']/g, char => ({
