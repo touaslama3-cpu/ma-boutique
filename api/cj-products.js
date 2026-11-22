@@ -34,6 +34,10 @@ module.exports = async function handler(req, res) {
 
   const keyword = String(req.query?.keyword || "women clothing")
     .trim().slice(0, 80);
+  const warehouse = String(req.query?.warehouse || "FR").toUpperCase();
+  if (!["FR", "CN", "US", "GB", "DE", "ES", "PL", "ALL"].includes(warehouse)) {
+    return res.status(400).json({ error: "Entrepôt invalide." });
+  }
   const allowed = /^[\p{L}\p{N} \-']+$/u.test(keyword);
   if (!allowed) return res.status(400).json({ error: "Recherche invalide." });
 
@@ -43,7 +47,7 @@ module.exports = async function handler(req, res) {
       page: "1",
       size: "24",
       keyWord: keyword,
-      countryCode: "FR",
+      ...(warehouse === "ALL" ? {} : { countryCode: warehouse }),
       startWarehouseInventory: "1",
       verifiedWarehouse: "1",
       productType: "4",
@@ -69,12 +73,13 @@ module.exports = async function handler(req, res) {
         image: String(p.bigImage),
         category: String(p.threeCategoryName || p.twoCategoryName || p.oneCategoryName || "Mode").slice(0, 100),
         stockAvailable: Number(p.totalVerifiedInventory || p.warehouseInventoryNum || 0),
-        shipsFromFranceStock: true,
+        warehouseFilter: warehouse,
         freeShippingFlag: Number(p.addMarkStatus) === 1
       }));
     return res.status(200).json({
       supplier: "CJdropshipping",
       keyword,
+      warehouse,
       count: products.length,
       page: 1,
       products
