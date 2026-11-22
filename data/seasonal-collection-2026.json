@@ -1,0 +1,151 @@
+{
+  "collection": {
+    "id": "hiver-noel-2026",
+    "title": "Hiver & fêtes 2026",
+    "subtitle": "Des essentiels chaleureux et des idées cadeaux soigneusement sélectionnés",
+    "status": "sourcing",
+    "destination_country": "FR",
+    "currency": "EUR",
+    "publication_requires_all_checks": true
+  },
+  "selection_rules": {
+    "supplier": "CJ Dropshipping",
+    "preferred_warehouse": ["FR", "DE", "PL", "ES", "BE", "EU"],
+    "allow_china_warehouse_only_if": "Le délai annoncé vers la France laisse une marge suffisante avant Noël et le coût total reste compétitif.",
+    "must_verify": [
+      "Correspondance exacte entre le produit présenté et la fiche fournisseur",
+      "Photos réelles et droits d'utilisation dans la boutique",
+      "Variantes réellement disponibles et stock par variante",
+      "Prix fournisseur et devise",
+      "Devis de livraison vers la France pour chaque variante retenue",
+      "Transporteur et délai estimé",
+      "Coût rendu en EUR et marge brute après frais connus",
+      "Conformité, sécurité et étiquetage applicables en UE lorsque nécessaire"
+    ],
+    "never_publish": [
+      "Référence sans variante exacte",
+      "Stock supposé ou global présenté comme stock de variante",
+      "Frais ou délais de livraison estimés sans devis",
+      "Produit avec photo générique ne représentant pas l'article réel",
+      "Promesse de livraison avant Noël non garantie"
+    ]
+  },
+  "product_targets": [
+    {
+      "priority": 1,
+      "collection": "Mode hiver",
+      "category": "Accessoires hiver",
+      "product": "Bonnet en maille",
+      "audience": ["femme", "homme", "unisexe"],
+      "preferred_attributes": ["couleurs sobres", "maille épaisse", "coupe intemporelle"],
+      "target_count": 2,
+      "status": "to_source"
+    },
+    {
+      "priority": 1,
+      "collection": "Mode hiver",
+      "category": "Accessoires hiver",
+      "product": "Écharpe chaude",
+      "audience": ["femme", "homme"],
+      "preferred_attributes": ["tons neutres", "texture douce", "dimensions clairement indiquées"],
+      "target_count": 2,
+      "status": "to_source"
+    },
+    {
+      "priority": 1,
+      "collection": "Mode hiver",
+      "category": "Accessoires hiver",
+      "product": "Gants d'hiver",
+      "audience": ["femme", "homme"],
+      "preferred_attributes": ["tailles claires", "matière indiquée", "fonction tactile seulement si vérifiée"],
+      "target_count": 1,
+      "status": "to_source"
+    },
+    {
+      "priority": 1,
+      "collection": "Idées cadeaux",
+      "category": "Bijoux",
+      "product": "Collier minimaliste",
+      "audience": ["cadeau"],
+      "preferred_attributes": ["composition matière vérifiée", "fermoir et dimensions précisés", "photos fidèles"],
+      "target_count": 2,
+      "status": "to_source"
+    },
+    {
+      "priority": 1,
+      "collection": "Idées cadeaux",
+      "category": "Bijoux",
+      "product": "Bracelet ou boucles d'oreilles",
+      "audience": ["cadeau"],
+      "preferred_attributes": ["matière vérifiée", "présentation cadeau", "pas d'allégation hypoallergénique non prouvée"],
+      "target_count": 2,
+      "status": "to_source"
+    },
+    {
+      "priority": 2,
+      "collection": "Maison & Noël",
+      "category": "Décoration de Noël",
+      "product": "Décorations de sapin élégantes",
+      "audience": ["maison", "cadeau"],
+      "preferred_attributes": ["palette vert profond, crème, doré, bordeaux", "dimensions indiquées"],
+      "target_count": 3,
+      "status": "to_source"
+    },
+    {
+      "priority": 2,
+      "collection": "Maison & Noël",
+      "category": "Art de la table",
+      "product": "Accessoires de table de fête",
+      "audience": ["maison", "cadeau"],
+      "preferred_attributes": ["matériaux précisés", "usage alimentaire vérifié si applicable"],
+      "target_count": 2,
+      "status": "to_source"
+    },
+    {
+      "priority": 2,
+      "collection": "Cocooning",
+      "category": "Maison",
+      "product": "Plaid ou housse de coussin",
+      "audience": ["maison", "cadeau"],
+      "preferred_attributes": ["composition textile", "dimensions exactes", "entretien précisé"],
+      "target_count": 2,
+      "status": "to_source"
+    },
+    {
+      "priority": 3,
+      "collection": "Cadeaux animaux",
+      "category": "Accessoires animaux",
+      "product": "Bandana ou accessoire festif pour animaux",
+      "audience": ["chien", "chat"],
+      "preferred_attributes": ["dimensions et matière exactes", "absence de petites pièces dangereuses"],
+      "target_count": 2,
+      "status": "to_source"
+    },
+    {
+      "priority": 3,
+      "collection": "Idées cadeaux",
+      "category": "Maroquinerie",
+      "product": "Petit sac ou portefeuille",
+      "audience": ["femme", "homme", "cadeau"],
+      "preferred_attributes": ["photos fidèles", "dimensions", "matière clairement décrite"],
+      "target_count": 2,
+      "status": "to_source"
+    }
+  ],
+  "merchandising": {
+    "homepage_campaign": "Collection Hiver & Noël 2026",
+    "homepage_sections": [
+      "Les essentiels de l'hiver",
+      "Idées cadeaux",
+      "Une maison aux couleurs des fêtes",
+      "Petites attentions pour tous"
+    ],
+    "visual_direction": {
+      "palette": ["vert sapin", "crème", "beige chaud", "doré discret", "bordeaux"],
+      "photography": "Photos fournisseur réelles, cohérentes et lumineuses; aucun visuel d'illustration présenté comme photographie contractuelle.",
+      "tone": "Élégant, chaleureux, rassurant et simple."
+    },
+    "pricing": "Déterminer le prix public après calcul du coût produit, du transport vers la France, des frais de paiement, de la TVA et de la marge cible.",
+    "seasonal_deadline": "Ne jamais annoncer une livraison garantie avant Noël sans délai fournisseur vérifié et marge de sécurité."
+  }
+}
