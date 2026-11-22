@@ -53,10 +53,10 @@ function parseOrderItems(raw) {
   for (const part of parts) {
     const match = /^(\d{3}):(\d{1,2})$/.exec(part);
     if (!match) return [];
-    const id = Number(match[1]), quantity = Number(match[2]), product = CATALOG[id];
+    const id = Number(match[1]), quantity = Number(match[2]), variant_key = match[3], product = CATALOG[id];
     if (!product || !Number.isInteger(quantity) || quantity < 1 || quantity > 20 || seen.has(id)) return [];
     seen.add(id);
-    items.push({ id, name: product.name, quantity, unit_amount: product.amount });
+    items.push({ id, name: product.name, quantity, unit_amount: product.amount, variant_key });
   }
   return items;
 }
