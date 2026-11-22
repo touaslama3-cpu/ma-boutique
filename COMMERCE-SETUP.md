@@ -27,6 +27,8 @@ Créer un endpoint webhook Stripe vers `https://www.taw.co/api/stripe-webhook` e
 Copier le secret de signature dans `STRIPE_WEBHOOK_SECRET`.
 
 ## 4. Administration CJ
+Page d'administration des variantes : `https://www.taw.co/admin-cj.html` (ou `/admin-cj.html` sur le domaine Vercel actif). La page est `noindex` mais reste publiquement accessible : la protection réelle est assurée par `TAWCO_ADMIN_TOKEN`, saisi dans la page et conservé uniquement en mémoire pendant la session. Ne partagez jamais ce jeton.
+
 Toutes les routes `/api/admin-cj-*` exigent `Authorization: Bearer TAWCO_ADMIN_TOKEN`.
 - `GET /api/admin-cj-mappings` : lister les liaisons TAW ↔ CJ.
 - `POST /api/admin-cj-mappings` : créer/mettre à jour une liaison de variante.
