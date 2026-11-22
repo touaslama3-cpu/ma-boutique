@@ -59,6 +59,17 @@ module.exports = async function handler(req, res) {
     }
     const body = req.body || {};
     if (!body.id || !["à préparer", "en préparation", "expédiée", "livrée", "annulée"].includes(body.fulfillment_status)) return json(res, 400, { error: "Commande ou statut invalide." });
+
+    // A refunded order is financially closed: never let fulfillment edits
+    // overwrite its refund status or send a misleading shipment update.
+    const currentResponse = await db("orders?id=eq." + encodeURIComponent(body.id) + "&select=id,payment_status,fulfillment_status");
+    const currentRows = await currentResponse.json();
+    if (!currentResponse.ok) return json(res, 502, { error: "Vérification de la commande impossible." });
+    if (!currentRows.length) return json(res, 404, { error: "Commande introuvable." });
+    if (currentRows[0].payment_status === "refunded" || currentRows[0].fulfillment_status === "remboursée") {
+      return json(res, 409, { error: "Cette commande est remboursée et ne peut plus être modifiée depuis le suivi des expéditions." });
+    }
+
     const patch = { fulfillment_status: body.fulfillment_status };
     for (const key of ["tracking_number", "tracking_url", "carrier", "customer_note"]) {
       if (typeof body[key] === "string") patch[key] = body[key].slice(0, 500);
