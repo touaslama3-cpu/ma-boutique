@@ -8,10 +8,8 @@ module.exports=async function(req,res){
  const country=String(req.query?.country||"FR").toUpperCase();
  if(!/^[A-Z]{2}$/.test(country))return res.status(400).json({error:"Pays invalide."});
  try{
-  const [detail,variants]=await Promise.all([
-   cj("/product/productDetail/query","POST",{id:pid}),
-   cj("/product/variant/query?pid="+encodeURIComponent(pid)+"&countryCode="+encodeURIComponent(country))
-  ]);
+  const detail=await cj("/product/productDetail/query","POST",{id:pid});
+  const variants=await cj("/product/variant/query?pid="+encodeURIComponent(pid)+"&countryCode="+encodeURIComponent(country));
   const v=Array.isArray(variants)?variants:(variants?.list||variants?.items||[]);
   const d=detail?.product||detail;
   return res.status(200).json({supplier:"CJdropshipping",productId:pid,country,product:{
@@ -19,5 +17,5 @@ module.exports=async function(req,res){
    sku:d?.sku||"",category:d?.categoryName||"",currency:"USD",priceRange:d?.sellPrice||"",
    variants:v.map(x=>({variantId:x.vid,sku:x.variantSku,name:x.variantNameEn||x.variantName||"",options:String(x.variantKey||"").split("-").filter(Boolean),image:x.variantImage||"",priceUsd:Number(x.variantSellPrice||0),weightGrams:Number(x.variantWeight||0),inventory:Array.isArray(x.inventories)?x.inventories.map(i=>({country:i.countryCode,available:Number(i.totalInventory||0),verifiedWarehouse:i.verifiedWarehouse})):[]})),
   }});
- }catch(e){console.error("CJ detail error",e.code,e.requestId);return res.status(502).json({error:e.message==="CJ_API_ERROR"?"CJ n'a pas pu fournir les détails de cet article.":"Connexion CJ indisponible."});}
+ }catch(e){console.error("CJ detail error",e.code,e.requestId,e.message);return res.status(502).json({error:e.message==="CJ_API_ERROR"?"CJ n'a pas pu fournir les détails de cet article.":"Connexion CJ indisponible.",stage:"detail-or-variants"});}
 };
