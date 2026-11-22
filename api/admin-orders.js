@@ -31,7 +31,7 @@ async function db(path, options = {}) {
   });
 }
 async function sendStatusEmail(order) {
-  if (!RESEND_KEY || !FROM_EMAIL || !order.customer_email) return;
+  if (!RESEND_KEY || !FROM_EMAIL || !order.customer_email) return false;
   const status = order.fulfillment_status || "mis à jour";
   const safeTrackingUrl = typeof order.tracking_url === "string" && /^https:\/\//i.test(order.tracking_url)
     ? order.tracking_url : "";
@@ -49,6 +49,7 @@ async function sendStatusEmail(order) {
     })
   });
   if (!response.ok) throw new Error("Resend returned HTTP " + response.status);
+  return true;
 }
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
@@ -102,8 +103,10 @@ module.exports = async function handler(req, res) {
     const rows = await response.json();
     if (!response.ok) return json(res, 502, { error: "Mise à jour de la commande impossible." });
     if (!rows.length) return json(res, 409, { error: "La commande est introuvable ou vient d’être remboursée. Actualisez la liste." });
-    await sendStatusEmail(rows[0]).catch(error => console.error("Order email failed:", error.message));
-    return json(res, 200, { order: rows[0] });
+    let emailSent = false;
+    try { emailSent = await sendStatusEmail(rows[0]); }
+    catch (error) { console.error("Order email failed:", error.message); }
+    return json(res, 200, { order: rows[0], email_sent: emailSent });
   } catch (error) {
     console.error("Admin orders error:", error.message);
     return json(res, 500, { error: "Erreur interne." });
