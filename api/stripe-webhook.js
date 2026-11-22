@@ -109,8 +109,16 @@ module.exports = async function handler(req, res) {
       const charge = event.data.object;
       const paymentIntent = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
       if (paymentIntent) {
+        const amount = Number(charge.amount || 0);
+        const refundedAmount = Number(charge.amount_refunded || 0);
+        const fullyRefunded = amount > 0 && refundedAmount >= amount;
+        const patch = {
+          refunded_amount: refundedAmount,
+          payment_status: fullyRefunded ? "refunded" : "partially_refunded"
+        };
+        if (fullyRefunded) patch.fulfillment_status = "remboursée";
         const response = await supabase("orders?stripe_payment_intent_id=eq." + encodeURIComponent(paymentIntent), {
-          method: "PATCH", body: JSON.stringify({ payment_status: "refunded", fulfillment_status: "remboursée" })
+          method: "PATCH", body: JSON.stringify(patch)
         });
         if (!response.ok) return res.status(503).json({ received: false });
       }
