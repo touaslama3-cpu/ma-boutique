@@ -74,7 +74,7 @@ module.exports = async function handler(req, res) {
     const event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
     if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
       const session = event.data.object;
-      if (session.mode === "payment" && session.payment_status === "paid") {
+      if (session.mode === "payment" && session.payment_status === "paid" && session.metadata?.order_source === "TAW.co") {
         const email = session.customer_details?.email || session.customer_email || "";
         const details = session.shipping_details || session.customer_details || {};
         const address = details.address || {};
