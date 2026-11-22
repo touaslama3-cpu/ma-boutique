@@ -98,6 +98,7 @@ module.exports = async function handler(req, res) {
         }
         const payload = {
           stripe_session_id: session.id,
+          user_id: typeof session.metadata?.customer_user_id === "string" && /^[0-9a-f-]{36}$/i.test(session.metadata.customer_user_id) ? session.metadata.customer_user_id : null,
           stripe_payment_intent_id: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id || null,
           customer_email: email,
           customer_phone: phone,
