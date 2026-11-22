@@ -173,6 +173,15 @@
 
 /* Variantes vérifiées sur la fiche fournisseur du polo Maroc 2026 */
 .variant-group{margin:16px 0}.variant-heading{font-size:13px;font-weight:850;margin-bottom:9px}.variant-list{display:flex;gap:8px;flex-wrap:wrap}.variant-chip{min-height:38px;padding:8px 12px;border:1px solid #cfd5d0;background:#fff;border-radius:3px;font-size:12px;cursor:pointer}.variant-chip.active{border:2px solid var(--deep);padding:7px 11px;font-weight:850}.variant-chip:focus-visible{outline:2px solid var(--green);outline-offset:2px}.variant-help{font-size:11px;color:var(--muted);line-height:1.55;margin-top:8px}.delivery-facts{font-size:12px;line-height:1.7;padding:12px;background:#f4f7f3;border:1px solid #e1e9e0}.detail-order-panel .delivery-facts b{color:var(--deep)}
+
+/* Polo TAW : image détourée de la capture fournisseur, sans interface ni prix tiers */
+#detailMainImage{cursor:zoom-in!important;touch-action:manipulation}
+.zoom-shade{z-index:9999!important}
+.zoom-stage{cursor:zoom-in;touch-action:pan-x pan-y}
+.zoom-stage img{max-width:92vw!important;max-height:82vh!important;object-fit:contain!important;transform-origin:center center;user-select:none}
+.zoom-controls{z-index:2}
+.zoom-controls button{font-weight:800}
+.zoom-hint{pointer-events:none}
 </style></head><body>
 <div id="orderSuccess" role="status" aria-live="polite" style="display:none;margin:16px auto;padding:18px 22px;max-width:1100px;border:1px solid #9bd4b5;border-radius:14px;background:#effaf3;color:#145c3b;font-weight:700;font-size:18px">✓ Commande validée ! Votre paiement a bien été confirmé. Merci pour votre commande chez TAW.co.</div>
 <div class="bar">✨ TAW.co — Vos trouvailles maison, mode & accessoires</div>
@@ -194,7 +203,7 @@ const products=[
 {id:5,name:"Crochets muraux adhésifs",category:"Maison",price:9.90,emoji:"🪝",desc:"Gardez vos petits accessoires à portée de main et libérez de l’espace en les suspendant au mur. Idéal pour organiser les objets du quotidien.",tag:"Petit prix",image:"product-05.jpg"},
 {id:6,name:"T-shirt essentiel homme",category:"Vêtements homme",price:19.90,emoji:"👕",desc:"Un essentiel facile à associer : ce T-shirt accompagne vos tenues décontractées, avec un style simple pour tous les jours.",tag:"Essentiel",image:"product-06.jpg"},
 {id:7,name:"Sweat à capuche homme",category:"Vêtements homme",price:34.90,emoji:"🧥",desc:"Adoptez un look décontracté avec ce sweat à capuche, facile à porter lors de vos sorties ou pendant vos moments de détente.",tag:"Confort",image:"product-07.jpg"},
-{id:8,name:"Polo Maroc 2026 — édition supporters",category:"Vêtements homme",price:27.90,emoji:"👕",desc:"Polo de football marocain 2026 à imprimé 3D, coupe annoncée confortable et respirante, avec col et détails décoratifs. Modèle présenté pour homme et femme.",tag:"Édition 2026",image:"product-08.jpg",supplierItemId:"1005012625768394"},
+{id:8,name:"Polo Maroc 2026 — édition supporters",category:"Vêtements homme",price:27.90,emoji:"👕",desc:"Polo de football marocain 2026 à imprimé 3D, coupe annoncée confortable et respirante, avec col et détails décoratifs. Modèle présenté pour homme et femme.",tag:"Édition 2026",image:"data:image/jpeg;base64,B64PLACEHOLDER",supplierItemId:"1005012625768394"},
 {id:9,name:"Baskets urbaines",category:"Vêtements homme",price:44.90,emoji:"👟",desc:"Un style sportif pour accompagner vos tenues de tous les jours, en ville comme pendant vos sorties.",tag:"Style",image:"product-09.jpg"},
 {id:10,name:"Montre connectée style sport",category:"Accessoires homme",price:39.90,emoji:"⌚",desc:"Une montre au cadran rectangulaire et au bracelet noir, dans un style connecté et sportif. Vérifiez les fonctions réellement compatibles sur la fiche vendeur.",tag:"Accessoire",image:"product-10.jpg"},
 {id:11,name:"Lunettes de soleil polarisées sport",category:"Accessoires homme",price:18.90,emoji:"🕶️",desc:"Des lunettes de soleil au style sportif avec verres présentés comme polarisés par le vendeur. Vérifiez les caractéristiques et la protection UV sur la fiche produit.",tag:"Accessoire",image:"product-11.jpg"},
