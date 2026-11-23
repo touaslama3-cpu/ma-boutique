@@ -11,21 +11,21 @@
 <section class="card"><h2>5. Avant toute ouverture des ventes</h2><p class="muted">Les correspondances doivent être vérifiées une par une : produit exact, taille/couleur, stock, pays d'expédition, transporteur et coût. Les frais de livraison vers la France doivent ensuite être calculés pour chaque variante et code postal. Le paiement Stripe reste bloqué et aucune commande CJ ne sera payée automatiquement depuis cette page.</p></section>
 </main><script>
 const products=[
-{id:101,name:"Robe de fêtes en velours",keyword:"women velvet evening dress"},
-{id:102,name:"Pull doux femme",keyword:"women's soft knit pullover sweater"},
-{id:103,name:"Cardigan femme",keyword:"women's knitted cardigan button front"},
-{id:104,name:"Manteau hiver femme",keyword:"women's winter long padded coat"},
-{id:105,name:"Ensemble jogging homme",keyword:"men's tracksuit set sweatshirt jogger"},
-{id:106,name:"Pull maille homme",keyword:"men's knitted crew neck sweater"},
-{id:107,name:"Sweat à capuche homme",keyword:"men's hooded sweatshirt hoodie"},
-{id:108,name:"Veste hiver homme",keyword:"men's winter padded jacket"},
-{id:109,name:"Chemise à carreaux homme",keyword:"men's plaid flannel shirt"},
-{id:110,name:"Pantalon homme",keyword:"men's casual straight leg trousers"},
-{id:111,name:"Polo homme",keyword:"men's short sleeve polo shirt"},
-{id:112,name:"T-shirt homme",keyword:"men's basic cotton crew neck t shirt"},
-{id:113,name:"Jean homme",keyword:"men's denim jeans straight fit"},
-{id:114,name:"Veste zippée homme",keyword:"men's casual zip up jacket"},
-{id:115,name:"Écharpe chaude unisexe",keyword:"unisex winter knitted scarf"}
+{id:101,name:"Robe de fêtes en velours",keyword:"women velvet evening dress",gender:"women"},
+{id:102,name:"Pull doux femme",keyword:"women's soft knit pullover sweater",gender:"women"},
+{id:103,name:"Cardigan femme",keyword:"women's knitted cardigan button front",gender:"women"},
+{id:104,name:"Manteau hiver femme",keyword:"women's winter long padded coat",gender:"women"},
+{id:105,name:"Ensemble jogging homme",keyword:"men's tracksuit set sweatshirt jogger",gender:"men"},
+{id:106,name:"Pull maille homme",keyword:"men's knitted crew neck sweater",gender:"men"},
+{id:107,name:"Sweat à capuche homme",keyword:"men's hooded sweatshirt hoodie",gender:"men"},
+{id:108,name:"Veste hiver homme",keyword:"men's winter padded jacket",gender:"men"},
+{id:109,name:"Chemise à carreaux homme",keyword:"men's plaid flannel shirt",gender:"men"},
+{id:110,name:"Pantalon homme",keyword:"men's casual straight leg trousers",gender:"men"},
+{id:111,name:"Polo homme",keyword:"men's short sleeve polo shirt",gender:"men"},
+{id:112,name:"T-shirt homme",keyword:"men's basic cotton crew neck t shirt",gender:"men"},
+{id:113,name:"Jean homme",keyword:"men's denim jeans straight fit",gender:"men"},
+{id:114,name:"Veste zippée homme",keyword:"men's casual zip up jacket",gender:"men"},
+{id:115,name:"Écharpe chaude unisexe",keyword:"unisex winter knitted scarf",gender:"unisex"}
 ];
 const $=id=>document.getElementById(id);let token="",variants=[],selectedQuote=null,productWarehouses=[];
 products.forEach(p=>{const o=document.createElement("option");o.value=p.id;o.textContent=p.id+" — "+p.name;$("storeProduct").append(o)});
@@ -50,10 +50,13 @@ $("searchSeasonal").onclick=async()=>{
   try{
    const response=await fetch("/api/cj-products?keyword="+encodeURIComponent(p.keyword)+"&warehouse="+encodeURIComponent($("searchWarehouse").value),{cache:"no-store"});
    const data=await response.json();if(!response.ok)throw new Error(data.error||"Recherche indisponible");
-   const results=(Array.isArray(data.products)?data.products:[]).slice(0,8);
-   detail.textContent=results.length+" résultat(s) · "+p.keyword;completed++;
-   if(!results.length){resultsBox.textContent="Aucun résultat trouvé pour cette recherche.";return}
-   for(const item of results){
+   const rawResults=Array.isArray(data.products)?data.products:[];
+   const isWrongGender=item=>{const t=((item.name||"")+" "+(item.category||"")).toLowerCase();if(p.gender==="men")return /women|woman|lady|girls|girl|female/.test(t);if(p.gender==="women")return /men's|mens|\bmen\b|male/.test(t);if(p.gender==="unisex")return false;return false};
+   const results=rawResults.filter(item=>!isWrongGender(item));
+   const ranked=results.sort((a,b)=>{const score=x=>{const t=((x.name||"")+" "+(x.category||"")).toLowerCase();if(p.gender==="men")return /men's|mens|\bmen\b|male/.test(t)?2:0;if(p.gender==="women")return /women|woman|lady|female/.test(t)?2:0;return 1};return score(b)-score(a)}).slice(0,24);
+   detail.textContent=ranked.length+" résultat(s) compatibles sur "+rawResults.length+" reçus · "+p.keyword;completed++;
+   if(!ranked.length){resultsBox.textContent=p.gender==="men"?"Aucun résultat homme confirmé dans les 24 premiers résultats CJ. Aucun produit femme ne sera affiché pour cet article.":"Aucun résultat correspondant au genre de ce produit dans les résultats CJ.";return}
+   for(const item of ranked){
     const row=document.createElement("div");row.className="search-result";
     const meta=document.createElement("div");const thumb=document.createElement("img");thumb.src=item.image||"";thumb.alt=item.name||"Photo produit CJ";thumb.loading="lazy";thumb.style.cssText="width:76px;height:88px;object-fit:contain;border-radius:8px;float:left;margin:0 10px 6px 0;background:#f7f8f4";const n=document.createElement("b");n.textContent=item.name||"Produit CJ";
     const d=document.createElement("div");d.className="muted";d.textContent="ID "+item.supplierProductId+" · SKU "+(item.sku||"—")+" · stock "+Number(item.stockAvailable||0)+" · "+(item.warehouseFilter||"—");
