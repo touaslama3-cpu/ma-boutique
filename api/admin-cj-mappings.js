@@ -66,7 +66,7 @@ module.exports = async function handler(req, res) {
       const zip = String(body.destination_zip || "").trim();
       const quantity = Number(body.quantity || 1);
       const productCost = Number(body.unit_cost_usd || 0);
-      if (!Number.isInteger(productId) || productId < 101 || productId > 115 ||
+      if (!Number.isInteger(productId) || productId < 101 || productId > 130 ||
           !variantKey || variantKey.length > 100 ||
           !/^[A-Za-z0-9-]{8,80}$/.test(cjProductId) ||
           !/^[A-Za-z0-9-]{8,80}$/.test(variantId) ||
@@ -151,7 +151,7 @@ module.exports = async function handler(req, res) {
     const origin = String(body.origin_country_code || "CN").trim().toUpperCase();
     const logistic = String(body.logistic_name || "").trim();
     const cost = Number(body.unit_cost_usd);
-    if (!Number.isInteger(productId) || productId < 101 || productId > 115 ||
+    if (!Number.isInteger(productId) || productId < 101 || productId > 130 ||
         !variantKey || variantKey.length > 100 ||
         !/^[A-Za-z0-9-]{8,80}$/.test(cjProductId) ||
         !/^[A-Za-z0-9-]{8,80}$/.test(variantId) ||
