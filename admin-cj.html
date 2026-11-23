@@ -55,16 +55,16 @@ $("searchSeasonal").onclick=async()=>{
    if(!results.length){resultsBox.textContent="Aucun résultat trouvé pour cette recherche.";return}
    for(const item of results){
     const row=document.createElement("div");row.className="search-result";
-    const meta=document.createElement("div");const n=document.createElement("b");n.textContent=item.name||"Produit CJ";
+    const meta=document.createElement("div");const thumb=document.createElement("img");thumb.src=item.image||"";thumb.alt=item.name||"Photo produit CJ";thumb.loading="lazy";thumb.style.cssText="width:76px;height:88px;object-fit:contain;border-radius:8px;float:left;margin:0 10px 6px 0;background:#f7f8f4";const n=document.createElement("b");n.textContent=item.name||"Produit CJ";
     const d=document.createElement("div");d.className="muted";d.textContent="ID "+item.supplierProductId+" · SKU "+(item.sku||"—")+" · stock "+Number(item.stockAvailable||0)+" · "+(item.warehouseFilter||"—");
-    meta.append(n,d);
+    meta.append(thumb,n,d);
     const use=document.createElement("button");use.type="button";use.className="secondary";use.textContent="Vérifier cette référence";
     use.onclick=()=>{$("storeProduct").value=String(p.id);$("searchKeyword").value=p.keyword;$("cjProduct").value=item.supplierProductId;loadCjProduct(item.supplierProductId);window.scrollTo({top:$("storeProduct").getBoundingClientRect().top+window.scrollY-30,behavior:"smooth"});};
     row.append(meta,use);resultsBox.append(row);
    }
   }catch(e){failed++;detail.textContent="Erreur : "+e.message}
  });
- for(let i=0;i<jobs.length;i++){intro.textContent="Recherche CJ en cours : "+(i+1)+" / "+jobs.length+" produits. Pause automatique entre les demandes pour respecter la limite CJ.";await jobs[i]();if(i<jobs.length-1)await new Promise(resolve=>setTimeout(resolve,1200));}
+ for(let i=0;i<jobs.length;i++){intro.textContent="Recherche CJ en cours : "+(i+1)+" / "+jobs.length+" produits. Traitement séquentiel sécurisé.";await jobs[i]();if(i<jobs.length-1)await new Promise(resolve=>setTimeout(resolve,2600));}
  intro.textContent="Recherche terminée : "+completed+" recherche(s) réussie(s), "+failed+" erreur(s). Vérifie les photos, variantes, stocks et entrepôts avant toute association.";
  button.disabled=false;
 };
