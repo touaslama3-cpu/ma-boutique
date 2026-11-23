@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>TAW.co — Aperçu privé des 9 fiches produits</title>
+<style>
+:root{--ink:#17251f;--green:#176448;--deep:#153d32;--cream:#faf9f5;--line:#e5e9e2;--muted:#68766e;--gold:#d7a84a}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+header{background:var(--deep);color:white;padding:17px max(20px,calc((100vw - 1180px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}
+.logo{font-size:25px;font-weight:950;letter-spacing:-1px}.logo span{color:#80c49b}.status{font-size:10px;font-weight:850;letter-spacing:.09em;border:1px solid #ffffff55;border-radius:99px;padding:7px 11px}
+main{width:min(1180px,calc(100% - 32px));margin:34px auto 65px}.kicker{color:var(--green);font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
+h1{font-size:clamp(29px,4.5vw,43px);line-height:1.1;letter-spacing:-1.5px;margin:8px 0}.lead{max-width:780px;color:var(--muted)}
+.notice{margin:20px 0 24px;padding:13px 16px;border:1px solid #e6d8b8;background:#fff8e9;border-radius:13px;color:#70572e;font-size:12px}
+.toolbar{display:flex;justify-content:space-between;gap:10px;align-items:center;color:var(--muted);font-size:12px;margin:22px 0 13px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px}
+.card{background:white;border:1px solid var(--line);border-radius:17px;overflow:hidden;display:flex;flex-direction:column;min-width:0;box-shadow:0 3px 12px #173b2b08}
+.card-photo{height:250px;width:100%;padding:13px;background:#f4f4f1;display:flex;align-items:center;justify-content:center;cursor:pointer;border:0}
+.card-photo img{width:100%;height:100%;object-fit:contain;display:block;transition:transform .2s}.card-photo:hover img{transform:scale(1.035)}
+.body{padding:15px 16px 17px;display:flex;flex-direction:column;flex:1}.category{font-size:10px;color:var(--green);font-weight:900;text-transform:uppercase;letter-spacing:.12em}
+h2{font-size:17px;line-height:1.35;margin:6px 0 8px}.price{font-size:21px;font-weight:900}.price small{font-size:10px;font-weight:600;color:var(--muted)}.meta{font-size:11px;color:var(--muted);margin:5px 0 12px}
+.open{margin-top:auto;border:0;border-radius:9px;background:var(--deep);color:white;padding:11px 14px;font-weight:800;cursor:pointer}.open:hover{background:var(--green)}
+.modal{position:fixed;inset:0;background:#0b1713b8;display:none;align-items:center;justify-content:center;padding:18px;z-index:10}.modal.show{display:flex}
+.dialog{background:white;border-radius:18px;width:min(900px,100%);max-height:min(92vh,900px);overflow:auto;position:relative;display:grid;grid-template-columns:1.05fr .95fr}
+.close{position:absolute;right:12px;top:12px;width:38px;height:38px;border:0;border-radius:50%;background:#eef1ed;font-size:23px;cursor:pointer;z-index:2}
+.gallery{padding:20px;background:#f5f5f2;display:flex;flex-direction:column;gap:12px;min-width:0}.main-image{height:410px;width:100%;display:flex;align-items:center;justify-content:center;background:white;border-radius:12px;overflow:hidden}.main-image img{width:100%;height:100%;object-fit:contain}
+.thumbs{display:flex;gap:8px}.thumb{width:68px;height:68px;padding:4px;border:1px solid var(--line);background:white;border-radius:8px}.thumb img{width:100%;height:100%;object-fit:contain}
+.details{padding:30px 26px 24px}.details h2{font-size:25px;margin:6px 35px 8px 0}.detail-price{font-size:27px;font-weight:950;margin:12px 0}.muted{font-size:12px;color:var(--muted)}
+.section{margin:18px 0}.section-title{font-size:12px;font-weight:850;margin-bottom:8px}.options{display:flex;flex-wrap:wrap;gap:8px}.option{border:1px solid #d8dfd8;background:white;border-radius:8px;padding:8px 12px;font-size:12px;cursor:pointer}.option.selected{border:2px solid var(--green);background:#eef6ef;color:var(--deep);font-weight:850;padding:7px 11px}.option:disabled{opacity:.35;cursor:not-allowed}
+.desc{font-size:13px;color:#48574f}.supplier-note{margin-top:18px;padding:11px;background:#f4f6f2;border-radius:9px;font-size:11px;color:#66736a}
+.cart-disabled{width:100%;border:0;border-radius:10px;padding:13px;background:#e8ece7;color:#627067;font-weight:850;margin-top:15px}
+.foot{border-top:1px solid var(--line);margin-top:34px;padding-top:16px;color:var(--muted);font-size:11px}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.card-photo{height:220px}}
+@media(max-width:620px){header{padding:14px 16px}.status{font-size:8px}.grid{grid-template-columns:1fr}.card-photo{height:260px}.dialog{grid-template-columns:1fr;max-height:94vh}.gallery{padding:12px}.main-image{height:290px}.details{padding:20px}.details h2{font-size:21px}}
+</style>
+</head>
+<body>
+<header><div class="logo">TAW<span>.co</span></div><div class="status">APERÇU PRIVÉ · NON PUBLIÉ</div></header>
+<main>
+<div class="kicker">Catalogue en préparation</div>
+<h1>Découvrez nos 9 sélections</h1>
+<p class="lead">Cliquez sur un produit pour ouvrir sa fiche, agrandir sa photo et sélectionner une couleur ou une taille. Cette version sert à valider la présentation avant la mise en vente.</p>
+<div class="notice"><strong>Version de travail uniquement.</strong> Les prix affichés sont les coûts fournisseur relevés sur les captures, pas les prix de vente TAW.co. Les sélecteurs reprennent les variantes visibles, à confirmer avec le fournisseur. Le panier et les paiements restent désactivés.</div>
+<div class="toolbar"><span>9 produits · fiches interactives</span><span>Utilisez « Voir le produit » pour ouvrir une fiche</span></div>
+<section class="grid" id="product-grid"></section>
+<div class="foot">TAW.co · Aperçu privé non indexé. Aucun lien AliExpress n'est présenté aux clients. Photos extraites des captures fournies ; photos dédiées à chaque coloris et stocks réels encore à confirmer.</div>
+</main>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+<div class="dialog">
+<button class="close" id="close" aria-label="Fermer">×</button>
+<div class="gallery"><div class="main-image"><img id="modal-image" src="" alt=""></div><div class="thumbs"><button class="thumb" id="thumb-main" aria-label="Afficher la photo principale"><img id="thumb-image" src="" alt=""></button></div></div>
+<div class="details"><div class="category" id="modal-category"></div><h2 id="modal-title"></h2><div class="detail-price" id="modal-price"></div><div class="muted" id="modal-meta"></div>
+<div class="section"><div class="section-title">Choisir un coloris</div><div class="options" id="colors"></div></div>
+<div class="section" id="size-section"><div class="section-title" id="size-title">Choisir une taille</div><div class="options" id="sizes"></div></div>
+<div class="section"><div class="section-title">Description</div><p class="desc" id="modal-desc"></p></div>
+<div class="supplier-note" id="supplier-note"></div>
+<button class="cart-disabled" disabled>Ajout au panier bientôt disponible</button>
+</div></div></div>
+<script>
+const products=[
+{id:1,name:"Pull homme torsadé à col haut",category:"Maille · Homme",price:"21,39 €",meta:"★ 4,2 · 351 avis · plus de 1 000 vendus",image:"/catalogue/01-pull-torsade.jpg",colors:["Blanc","Noir","Beige","Gris"],sizes:["S","M","L","XL","XXL","XXXL"],description:"Pull homme à maille torsadée et col haut. Coloris et tailles relevés sur la capture fournisseur.",supplier:"Trendy Fashion Factory"},
+{id:2,name:"Baskets homme légères et respirantes",category:"Chaussures · Homme",price:"20,39 €",meta:"★ 4,7 · 118 avis · plus de 700 vendues",image:"/catalogue/02-baskets-bleues.jpg",colors:["Noir","Bleu","Blanc","Beige","Autres à confirmer"],sizes:["39","40","41","42","43","44","45","46"],description:"Baskets légères et respirantes pour homme. Pointures européennes 39 à 46 relevées sur la capture.",supplier:"BIG RUNNING Factory"},
+{id:3,name:"Pantalon cargo hiver doublé polaire",category:"Pantalon · Homme",price:"21,99 €",meta:"★ 4,5 · 611 avis · plus de 2 000 vendus",image:"/catalogue/03-pantalon-cargo.jpg",colors:["Noir","Beige","Vert","Bleu / autres à confirmer"],sizes:["M","L","XL","XXL","XXXL","4XL"],description:"Pantalon cargo hiver doublé polaire. Les tailles étaient associées à des indications de poids sur la capture ; à revérifier avant vente.",supplier:"Karcess Outdoor Store"},
+{id:4,name:"Montre homme WLISH à cadran vert",category:"Accessoire · Homme",price:"11,19 €",meta:"★ 4,7 · 785 avis · plus de 5 000 vendues",image:"/catalogue/04-montre-verte.jpg",colors:["Argent et or","Vert","Noir","Argent","Or"],sizes:[],description:"Montre à mouvement quartz, affichage date/jour et bracelet en acier inoxydable. Étanchéité 3 bar annoncée par le vendeur.",supplier:"WLISH Watch Store"},
+{id:5,name:"Polo football Maroc 2027 — motif éventail",category:"Football · Maroc",price:"15,79 €",meta:"★ 4,7 · plus de 1 000 vendus",image:"/catalogue/05-polo-maroc.jpg",colors:["Beige"],sizes:["S","M","L","XL","XXL","XXXL","4XL","5XL"],description:"Polo de football aux motifs inspirés du Maroc. La capture montre le coloris beige et les tailles S à 5XL.",supplier:"Shop1105843911 Store"},
+{id:6,name:"Sweat à capuche Jack & Jones",category:"Sweat · Homme",price:"13,79 €",meta:"★ 4,4 · 5 avis · 58 vendus",image:"/catalogue/06-sweat-jack-jones.jpg",colors:["Noir","Blanc","Bleu","Bordeaux","Gris","Violet","Bleu marine","Vert","Rose","Jaune","Beige","Rouge"],sizes:["S","M","L","XL","XXL","XXXL"],description:"Sweat à capuche. Les coloris et tailles sont repris des captures ; authenticité de la marque et droits d'utilisation à vérifier avant commercialisation.",supplier:"Shop1105409848 Store"},
+{id:7,name:"Chaussures décontractées homme respirantes",category:"Chaussures · Homme",price:"22,39 €",meta:"★ 4,5 · 2 avis · 13 vendues",image:"/catalogue/07-baskets-blanches.jpg",colors:["Bleu","Blanc","Beige","Noir","Marron"],sizes:["40","41","42","43","44","45","46"],description:"Chaussures décontractées et respirantes. Très peu d'avis sur la capture : contrôle qualité conseillé.",supplier:"Sneakers Dropshipping"},
+{id:8,name:"Jean skinny déchiré homme",category:"Jean · Homme",price:"17,39 €",meta:"★ 4,3 · 138 avis · plus de 700 vendus",image:"/catalogue/08-jean-dechire.jpg",colors:["Bleu clair","Noir","Gris","Bleu foncé"],sizes:["S","M","L","XL","XXL","XXXL"],description:"Jean skinny déchiré pour homme. Coloris et tailles relevés sur la capture fournisseur.",supplier:"Very Popular Store"},
+{id:9,name:"Sweat homme YOUKAIJIN à col montant zippé",category:"Sweat zippé · Homme",price:"10,79 €",meta:"★ 4,5 · 99 avis · plus de 500 vendus",image:"/catalogue/09-sweat-zippe.jpg",colors:["Blanc","Noir","Gris / bleu"],sizes:["S","M","L","XL","2XL","3XL"],description:"Sweat homme à fermeture zippée et col montant. Livraison affichée à 12,02 € sur la capture, à revalider.",supplier:"YOUKAIJIN Clothing Factory"}
+];
+const grid=document.getElementById("product-grid"),modal=document.getElementById("modal");
+function card(p){return '<article class="card"><button class="card-photo" data-open="'+p.id+'" aria-label="Voir '+p.name+'"><img src="'+p.image+'" alt="'+p.name+'" loading="lazy"></button><div class="body"><div class="category">'+p.category+'</div><h2>'+p.name+'</h2><div class="price">'+p.price+' <small>coût fournisseur relevé</small></div><div class="meta">'+p.meta+'</div><button class="open" data-open="'+p.id+'">Voir le produit</button></div></article>'}
+grid.innerHTML=products.map(card).join("");
+let active=null,selectedColor="",selectedSize="";
+function renderOptions(id,items,selected,kind){const node=document.getElementById(id);node.innerHTML=items.map(v=>'<button type="button" class="option '+(v===selected?'selected':'')+'" data-kind="'+kind+'" data-value="'+v.replace(/"/g,'&quot;')+'">'+v+'</button>').join("")}
+function openProduct(id){active=products.find(p=>p.id===id);if(!active)return;selectedColor=active.colors[0]||"";selectedSize=active.sizes[0]||"";document.getElementById("modal-image").src=active.image;document.getElementById("modal-image").alt=active.name;document.getElementById("thumb-image").src=active.image;document.getElementById("modal-category").textContent=active.category;document.getElementById("modal-title").textContent=active.name;document.getElementById("modal-price").textContent=active.price;document.getElementById("modal-meta").textContent=active.meta;document.getElementById("modal-desc").textContent=active.description;document.getElementById("supplier-note").textContent="Fournisseur de référence interne : "+active.supplier+". Variante et stock à confirmer avant toute vente.";document.getElementById("size-section").style.display=active.sizes.length?"block":"none";document.getElementById("size-title").textContent=active.id===2||active.id===7?"Choisir une pointure":"Choisir une taille";renderOptions("colors",active.colors,selectedColor,"color");renderOptions("sizes",active.sizes,selectedSize,"size");modal.classList.add("show");document.body.style.overflow="hidden"}
+function closeModal(){modal.classList.remove("show");document.body.style.overflow=""}
+grid.addEventListener("click",e=>{const b=e.target.closest("[data-open]");if(b)openProduct(Number(b.dataset.open))});
+document.getElementById("close").addEventListener("click",closeModal);modal.addEventListener("click",e=>{if(e.target===modal)closeModal()});document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
+document.getElementById("colors").addEventListener("click",e=>{const b=e.target.closest("[data-kind=color]");if(!b)return;selectedColor=b.dataset.value;renderOptions("colors",active.colors,selectedColor,"color")});
+document.getElementById("sizes").addEventListener("click",e=>{const b=e.target.closest("[data-kind=size]");if(!b)return;selectedSize=b.dataset.value;renderOptions("sizes",active.sizes,selectedSize,"size")});
+document.getElementById("thumb-main").addEventListener("click",()=>{if(active)document.getElementById("modal-image").src=active.image});
+</script>
+</body></html>
