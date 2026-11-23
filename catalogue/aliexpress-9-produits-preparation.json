@@ -1,0 +1,288 @@
+{
+  "project": "TAW.co",
+  "purpose": "Préparation interne du catalogue fournisseur — ne pas publier tel quel",
+  "source": "Captures AliExpress fournies dans la conversation le 23/11/2026 et liens produits transmis par l'utilisateur",
+  "status": "draft_unverified",
+  "publication": {
+    "maintenance_required": true,
+    "public_listing": false,
+    "checkout_enabled": false,
+    "note": "Ne pas publier ni activer les paiements avant vérification des photos originales, variantes, stocks, frais de livraison et prix de revient."
+  },
+  "products": [
+    {
+      "position": 1,
+      "product_id": "1005010305357504",
+      "name": "Pull homme torsadé à col haut",
+      "supplier": "Trendy Fashion Factory",
+      "supplier_price_eur": 21.39,
+      "rating": 4.2,
+      "reviews": 351,
+      "sales_label": "Plus de 1 000 vendus",
+      "colors": [
+        "Blanc",
+        "Noir",
+        "Beige",
+        "Gris"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL",
+        "XXXL"
+      ],
+      "delivery_label": "Livraison gratuite annoncée du 29 novembre au 3 décembre",
+      "returns_label": "Retour gratuit annoncé sous 15 jours",
+      "source_url": "https://fr.aliexpress.com/item/1005010305357504.html",
+      "image_assets_status": "Captures reçues; fichiers photo originaux à intégrer"
+    },
+    {
+      "position": 2,
+      "product_id": "1005010659497987",
+      "name": "Baskets homme légères et respirantes",
+      "supplier": "BIG RUNNING Factory",
+      "supplier_price_eur": 20.39,
+      "rating": 4.7,
+      "reviews": 118,
+      "sales_label": "Plus de 700 vendus",
+      "colors": [
+        "Noir",
+        "Bleu",
+        "Blanc",
+        "Beige",
+        "Autres coloris visibles sur la fiche"
+      ],
+      "sizes": [
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45",
+        "46"
+      ],
+      "delivery_label": "Livraison gratuite annoncée du 1er au 3 décembre",
+      "returns_label": "Retour gratuit annoncé sous 15 jours",
+      "source_url": "https://fr.aliexpress.com/item/1005010659497987.html",
+      "image_assets_status": "Captures reçues; fichiers photo originaux à intégrer"
+    },
+    {
+      "position": 3,
+      "product_id": "1005007448089592",
+      "name": "Pantalon cargo hiver doublé polaire",
+      "supplier": "Karcess Outdoor Store",
+      "supplier_price_eur": 21.99,
+      "rating": 4.5,
+      "reviews": 611,
+      "sales_label": "Plus de 2 000 vendus",
+      "colors": [
+        "Noir",
+        "Beige",
+        "Vert",
+        "Bleu et autres coloris visibles"
+      ],
+      "sizes": [
+        "M (55–65 kg)",
+        "L (66–75 kg)",
+        "XL (76–85 kg)",
+        "XXL (86–95 kg)",
+        "XXXL (96–105 kg)",
+        "4XL (106–115 kg)",
+        "5XL affiché indisponible sur la capture"
+      ],
+      "delivery_label": "Livraison gratuite annoncée du 29 novembre au 3 décembre",
+      "returns_label": "Retour gratuit annoncé sous 15 jours",
+      "source_url": "https://fr.aliexpress.com/item/1005007448089592.html",
+      "image_assets_status": "Captures reçues; fichiers photo originaux à intégrer"
+    },
+    {
+      "position": 4,
+      "product_id": "1005009947102689",
+      "name": "Montre homme WLISH à cadran vert",
+      "supplier": "WLISH Watch Store",
+      "supplier_price_eur": 11.19,
+      "rating": 4.7,
+      "reviews": 785,
+      "sales_label": "Plus de 5 000 vendus",
+      "colors": [
+        "Argent et or",
+        "Vert",
+        "Noir",
+        "Argent",
+        "Or"
+      ],
+      "sizes": [],
+      "delivery_label": "Livraison gratuite annoncée du 29 novembre au 3 décembre",
+      "returns_label": "Retour gratuit annoncé sous 90 jours",
+      "source_url": "https://fr.aliexpress.com/item/1005009947102689.html",
+      "image_assets_status": "Captures reçues; fichiers photo originaux à intégrer",
+      "specs_claims_from_listing": [
+        "Mouvement quartz",
+        "Affichage date et jour",
+        "Acier inoxydable",
+        "Étanchéité annoncée 3 bar"
+      ]
+    },
+    {
+      "position": 5,
+      "product_id": "1005013340628271",
+      "name": "Polo football Maroc 2027 motif éventail marocain",
+      "supplier": "Shop1105843911 Store",
+      "supplier_price_eur": 15.79,
+      "rating": 4.7,
+      "reviews": null,
+      "sales_label": "Plus de 1 000 vendus",
+      "colors": [
+        "Beige (deux visuels de variantes visibles)"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL",
+        "XXXL",
+        "4XL",
+        "5XL"
+      ],
+      "delivery_label": "Livraison gratuite annoncée du 2 au 4 décembre",
+      "returns_label": "Retour gratuit annoncé sous 15 jours",
+      "source_url": "https://fr.aliexpress.com/item/1005013340628271.html",
+      "image_assets_status": "Captures reçues; fichiers photo originaux à intégrer"
+    },
+    {
+      "position": 6,
+      "product_id": "1005013119115531",
+      "name": "Sweat à capuche Jack & Jones",
+      "supplier": "Shop1105409848 Store",
+      "supplier_price_eur": 13.79,
+      "rating": 4.4,
+      "reviews": 5,
+      "sales_label": "58 vendus",
+      "colors": [
+        "Noir",
+        "Blanc",
+        "Bleu",
+        "Bordeaux",
+        "Gris",
+        "Violet",
+        "Bleu marine",
+        "Vert",
+        "Rose",
+        "Jaune",
+        "Beige",
+        "Rouge"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL",
+        "XXXL"
+      ],
+      "delivery_label": "Livraison gratuite annoncée du 2 au 4 décembre",
+      "returns_label": "Retour gratuit annoncé sous 15 jours",
+      "source_url": "https://fr.aliexpress.com/item/1005013119115531.html",
+      "image_assets_status": "Captures reçues; fichiers photo originaux à intégrer"
+    },
+    {
+      "position": 7,
+      "product_id": "1005013183381535",
+      "name": "Chaussures décontractées homme respirantes",
+      "supplier": "Sneakers Dropshipping",
+      "supplier_price_eur": 22.39,
+      "rating": 4.5,
+      "reviews": 2,
+      "sales_label": "13 vendus",
+      "colors": [
+        "Bleu",
+        "Blanc",
+        "Beige",
+        "Noir",
+        "Marron"
+      ],
+      "sizes": [
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45",
+        "46"
+      ],
+      "delivery_label": "Livraison gratuite annoncée du 1er au 5 décembre",
+      "returns_label": "Retour gratuit annoncé sous 15 jours",
+      "source_url": "https://fr.aliexpress.com/item/1005013183381535.html",
+      "image_assets_status": "Captures reçues; fichiers photo originaux à intégrer"
+    },
+    {
+      "position": 8,
+      "product_id": "1005006022456788",
+      "name": "Jean skinny déchiré homme",
+      "supplier": "Very Popular Store",
+      "supplier_price_eur": 17.39,
+      "rating": 4.3,
+      "reviews": 138,
+      "sales_label": "Plus de 700 vendus",
+      "colors": [
+        "Bleu clair",
+        "Noir",
+        "Gris",
+        "Bleu foncé"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL",
+        "XXXL"
+      ],
+      "delivery_label": "Livraison gratuite annoncée du 29 novembre au 3 décembre",
+      "returns_label": "Retour gratuit annoncé sous 15 jours",
+      "source_url": "https://fr.aliexpress.com/item/1005006022456788.html",
+      "image_assets_status": "Captures reçues; fichiers photo originaux à intégrer"
+    },
+    {
+      "position": 9,
+      "product_id": "1005009775509435",
+      "name": "Sweat homme YOUKAIJIN à fermeture éclair et col montant",
+      "supplier": "YOUKAIJIN Clothing Factory (nom tronqué sur la capture)",
+      "supplier_price_eur": 10.79,
+      "rating": 4.5,
+      "reviews": 99,
+      "sales_label": "Plus de 500 vendus",
+      "colors": [
+        "Blanc",
+        "Noir",
+        "Gris/bleu (nuances visibles)"
+      ],
+      "sizes": [
+        "European S",
+        "European M",
+        "European L",
+        "European XL",
+        "European 2XL",
+        "European 3XL"
+      ],
+      "delivery_cost_shown_eur": 12.02,
+      "delivery_type": "Standard",
+      "delivery_label": "Livraison standard affichée du 4 au 11 décembre; 12,02 €",
+      "returns_label": "Retour gratuit annoncé sous 15 jours",
+      "source_url": "https://fr.aliexpress.com/item/1005009775509435.html",
+      "image_assets_status": "Captures reçues; fichiers photo originaux à intégrer"
+    }
+  ],
+  "pending_checks": [
+    "Revalider chaque prix fournisseur et les frais vers la France dans la variante exacte.",
+    "Confirmer stocks et combinaisons taille/couleur en temps réel.",
+    "Récupérer et intégrer les images originales de chaque annonce; ne pas utiliser d'images génériques ou des visuels de substitution.",
+    "Calculer le prix de vente et la marge après coût rendu, frais de paiement, retours et taxes applicables.",
+    "Associer les références aux produits dans DSers et vérifier le flux de commande.",
+    "Tester les fiches sur ordinateur et mobile avant toute publication."
+  ]
+}
