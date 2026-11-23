@@ -1,21 +1,36 @@
 // TAW.co — catalogue CJdropshipping (lecture seule).
 // La clé CJ reste exclusivement côté serveur dans CJ_API_KEY.
 let tokenCache = { value: null, expiresAt: 0 };
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+async function cjJson(url, options, label) {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const response = await fetch(url, options);
+    const payload = await response.json().catch(() => ({}));
+    if (response.ok && payload.code === 200) return payload;
+    if (Number(payload.code) === 1600200 && attempt < 3) {
+      console.warn("CJ rate limit; retrying", label, attempt + 1);
+      await sleep(1500 * (attempt + 1));
+      continue;
+    }
+    console.error("CJ request failed", label, payload.code, payload.message, payload.requestId);
+    const error = new Error(label === "authentication" ? "CJ_AUTH_FAILED" : "CJ_PRODUCT_QUERY_FAILED");
+    error.code = payload.code;
+    throw error;
+  }
+  throw new Error("CJ_RATE_LIMIT");
+}
 
 async function getAccessToken() {
   if (tokenCache.value && tokenCache.expiresAt > Date.now() + 60_000) return tokenCache.value;
   const apiKey = process.env.CJ_API_KEY;
   if (!apiKey) throw new Error("CJ_API_KEY_MISSING");
-  const response = await fetch("https://developers.cjdropshipping.com/api2.0/v1/authentication/getAccessToken", {
+  const payload = await cjJson("https://developers.cjdropshipping.com/api2.0/v1/authentication/getAccessToken", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ apiKey })
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok || payload.code !== 200 || !payload.data?.accessToken) {
-    console.error("CJ authentication failed", payload.code, payload.message, payload.requestId);
-    throw new Error("CJ_AUTH_FAILED");
-  }
+  }, "authentication");
+  if (!payload.data?.accessToken) throw new Error("CJ_AUTH_FAILED");
   const expiry = Date.parse(payload.data.accessTokenExpiryDate || "");
   tokenCache = {
     value: payload.data.accessToken,
@@ -43,6 +58,9 @@ module.exports = async function handler(req, res) {
 
   try {
     const accessToken = await getAccessToken();
+    // CJ applies one global request/second limit, including authentication.
+    // Keep a gap between token creation and the catalogue request.
+    await sleep(1300);
     const params = new URLSearchParams({
       page: "1",
       size: "24",
@@ -53,14 +71,10 @@ module.exports = async function handler(req, res) {
       productType: "4",
       features: "enable_category"
     });
-    const response = await fetch("https://developers.cjdropshipping.com/api2.0/v1/product/listV2?" + params.toString(), {
+    const payload = await cjJson("https://developers.cjdropshipping.com/api2.0/v1/product/listV2?" + params.toString(), {
       headers: { "CJ-Access-Token": accessToken }
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok || payload.code !== 200 || !payload.data) {
-      console.error("CJ product query failed", payload.code, payload.message, payload.requestId);
-      return res.status(502).json({ error: "Le catalogue fournisseur est temporairement indisponible." });
-    }
+    }, "product");
+    if (!payload.data) return res.status(502).json({ error: "Le catalogue fournisseur est temporairement indisponible." });
 
     const groups = Array.isArray(payload.data.content) ? payload.data.content : [];
     const products = groups.flatMap(group => Array.isArray(group.productList) ? group.productList : [])
