@@ -41,27 +41,38 @@ module.exports=async function handler(req,res){
  if(req.method!=="POST")return res.status(405).json({error:"Méthode non autorisée."});
  if(!authorized(req))return res.status(401).json({error:"Accès refusé."});
  if(!SUPABASE_URL||!SERVICE_KEY)return res.status(503).json({error:"Supabase non configuré."});
- const offset=Number(req.body?.offset??0),warehouse=String(req.body?.warehouse||"ALL").toUpperCase();
- if(!Number.isInteger(offset)||offset<0||offset>=15||!["ALL","FR","DE","ES","PL","CN","US","GB"].includes(warehouse))return res.status(400).json({error:"Paramètres invalides."});
- const batch=products.slice(offset,Math.min(offset+2,15)),summary=[];
+ const requestedOffset=Number(req.body?.offset??0),warehouse=String(req.body?.warehouse||"ALL").toUpperCase();
+ if(!Number.isInteger(requestedOffset)||requestedOffset<0||requestedOffset>15||!["ALL","FR","DE","ES","PL","CN","US","GB"].includes(warehouse))return res.status(400).json({error:"Paramètres invalides."});
  try {
-  for(let i=0;i<batch.length;i++){
-   const p=batch[i];
-   const params=new URLSearchParams({page:"1",size:"24",keyWord:p[2],startWarehouseInventory:"1",verifiedWarehouse:"1",productType:"4",features:"enable_category",...(warehouse==="ALL"?{}:{countryCode:warehouse})});
-   const data=await cj("/product/listV2?"+params.toString());
-   const groups=Array.isArray(data?.content)?data.content:[];
-   const raw=groups.flatMap(g=>Array.isArray(g.productList)?g.productList:[]).filter(x=>x&&x.id&&x.bigImage&&x.saleStatus==="3");
-   const candidates=raw.map(x=>({id:String(x.id),sku:String(x.sku||""),name:String(x.nameEn||"Article").slice(0,180),image:String(x.bigImage),category:String(x.threeCategoryName||x.twoCategoryName||x.oneCategoryName||"Mode").slice(0,100),stock:Number(x.totalVerifiedInventory||x.warehouseInventoryNum||0)}))
-    .map(x=>({...x,score:score(p,{name:x.name,category:x.category})}))
-    .filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,12);
-   if(candidates.length){
-    const rows=candidates.map(x=>({store_product_id:p[0],store_product_name:p[1],cj_product_id:x.id,cj_product_name:x.name,cj_sku:x.sku,image_url:x.image,category:x.category,stock_available:x.stock,warehouse_filter:warehouse,match_score:x.score,match_status:"needs_review"}));
-    const saved=await db("supplier_product_candidates?on_conflict=store_product_id,cj_product_id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=representation"},body:JSON.stringify(rows)});
-    if(!saved.ok)throw new Error("CANDIDATE_SAVE_FAILED");
-   }
-   summary.push({store_product_id:p[0],name:p[1],found:raw.length,saved:candidates.length});
-   if(i<batch.length-1)await sleep(1400);
+  let offset=requestedOffset;
+  // A fresh run resumes at the first product that has no saved candidates yet.
+  if(offset===0){
+   const existing=await db("supplier_product_candidates?select=store_product_id",{method:"GET"});
+   if(!existing.ok)throw new Error("CANDIDATE_READ_FAILED");
+   const completed=new Set((await existing.json()).map(x=>Number(x.store_product_id)));
+   offset=products.findIndex(p=>!completed.has(p[0]));
+   if(offset<0)return res.status(200).json({ok:true,offset:15,next_offset:15,processed:0,results:[],done:true,message:"Les 15 produits ont déjà des candidats enregistrés."});
   }
-  return res.status(200).json({ok:true,offset,next_offset:offset+batch.length,processed:batch.length,results:summary,done:offset+batch.length>=15});
+  if(offset>=15)return res.status(200).json({ok:true,offset,next_offset:15,processed:0,results:[],done:true});
+  const p=products[offset];
+  const params=new URLSearchParams({page:"1",size:"24",keyWord:p[2],startWarehouseInventory:"1",verifiedWarehouse:"1",productType:"4",features:"enable_category",...(warehouse==="ALL"?{}:{countryCode:warehouse})});
+  let data,lastError;
+  for(let attempt=0;attempt<3;attempt++){
+   try{data=await cj("/product/listV2?"+params.toString());if(data)break;}catch(e){lastError=e;}
+   if(attempt<2)await sleep(1800*(attempt+1));
+  }
+  if(!data)throw lastError||new Error("CJ_SEARCH_FAILED");
+  const groups=Array.isArray(data?.content)?data.content:[];
+  const raw=groups.flatMap(g=>Array.isArray(g.productList)?g.productList:[]).filter(x=>x&&x.id&&x.bigImage&&x.saleStatus==="3");
+  const candidates=raw.map(x=>({id:String(x.id),sku:String(x.sku||""),name:String(x.nameEn||"Article").slice(0,180),image:String(x.bigImage),category:String(x.threeCategoryName||x.twoCategoryName||x.oneCategoryName||"Mode").slice(0,100),stock:Number(x.totalVerifiedInventory||x.warehouseInventoryNum||0)}))
+   .map(x=>({...x,score:score(p,{name:x.name,category:x.category})}))
+   .filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,12);
+  if(candidates.length){
+   const rows=candidates.map(x=>({store_product_id:p[0],store_product_name:p[1],cj_product_id:x.id,cj_product_name:x.name,cj_sku:x.sku,image_url:x.image,category:x.category,stock_available:x.stock,warehouse_filter:warehouse,match_score:x.score,match_status:"needs_review"}));
+   const saved=await db("supplier_product_candidates?on_conflict=store_product_id,cj_product_id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=representation"},body:JSON.stringify(rows)});
+   if(!saved.ok)throw new Error("CANDIDATE_SAVE_FAILED");
+  }
+  const next=offset+1;
+  return res.status(200).json({ok:true,offset:next,previous_offset:offset,next_offset:next,processed:1,results:[{store_product_id:p[0],name:p[1],found:raw.length,saved:candidates.length}],done:next>=15});
  }catch(e){console.error("CJ automated sync failed",e.code||e.message);return res.status(502).json({error:"Synchronisation interrompue. Les résultats déjà enregistrés sont conservés.",details:e.message==="CANDIDATE_SAVE_FAILED"?"Enregistrement Supabase impossible.":"Le fournisseur CJ n'a pas répondu correctement.",next_offset:offset});}
 };
