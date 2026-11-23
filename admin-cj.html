@@ -11,22 +11,21 @@
 <section class="card"><h2>5. Avant toute ouverture des ventes</h2><p class="muted">Les correspondances doivent être vérifiées une par une : produit exact, taille/couleur, stock, pays d'expédition, transporteur et coût. Les frais de livraison vers la France doivent ensuite être calculés pour chaque variante et code postal. Le paiement Stripe reste bloqué et aucune commande CJ ne sera payée automatiquement depuis cette page.</p></section>
 </main><script>
 const products=[
-{id:101,name:"Robe de fêtes en velours",keyword:"women velvet party dress"},
-{id:102,name:"Pull doux femme",keyword:"women winter knit sweater"},
-{id:103,name:"Cardigan femme",keyword:"women knitted cardigan"},
-{id:104,name:"Manteau hiver femme",keyword:"women winter coat"},
-{id:105,name:"Ensemble chaud femme",keyword:"women winter two piece set"},
-{id:106,name:"Pull maille homme",keyword:"men knitted sweater"},
-{id:107,name:"Sweat à capuche homme",keyword:"men winter hoodie"},
-{id:108,name:"Veste hiver homme",keyword:"men winter jacket"},
-{id:109,name:"Chemise à carreaux homme",keyword:"men plaid flannel shirt"},
-{id:110,name:"Pantalon homme hiver",keyword:"men casual winter trousers"},
-{id:111,name:"Écharpe chaude unisexe",keyword:"winter scarf unisex"},
-{id:112,name:"Bonnet hiver unisexe",keyword:"winter knitted beanie unisex"},
-{id:113,name:"Gants hiver",keyword:"winter warm gloves"},
-{id:114,name:"Sac cadeau femme",keyword:"women elegant shoulder bag"},
-{id:115,name:"Accessoire cadeau",keyword:"fashion winter gift accessories"}
-];
+{id:101,name:"Robe de fêtes en velours",keyword:"women velvet evening dress"},
+{id:102,name:"Pull doux femme",keyword:"women's soft knit pullover sweater"},
+{id:103,name:"Cardigan femme",keyword:"women's knitted cardigan button front"},
+{id:104,name:"Manteau hiver femme",keyword:"women's winter long padded coat"},
+{id:105,name:"Ensemble jogging homme",keyword:"men's tracksuit set sweatshirt jogger"},
+{id:106,name:"Pull maille homme",keyword:"men's knitted crew neck sweater"},
+{id:107,name:"Sweat à capuche homme",keyword:"men's hooded sweatshirt hoodie"},
+{id:108,name:"Veste hiver homme",keyword:"men's winter padded jacket"},
+{id:109,name:"Chemise à carreaux homme",keyword:"men's plaid flannel shirt"},
+{id:110,name:"Pantalon homme",keyword:"men's casual straight leg trousers"},
+{id:111,name:"Polo homme",keyword:"men's short sleeve polo shirt"},
+{id:112,name:"T-shirt homme",keyword:"men's basic cotton crew neck t shirt"},
+{id:113,name:"Jean homme",keyword:"men's denim jeans straight fit"},
+{id:114,name:"Veste zippée homme",keyword:"men's casual zip up jacket"},
+{id:115,name:"Écharpe chaude unisexe",keyword:"unisex winter knitted scarf"}
 const $=id=>document.getElementById(id);let token="",variants=[],selectedQuote=null,productWarehouses=[];
 products.forEach(p=>{const o=document.createElement("option");o.value=p.id;o.textContent=p.id+" — "+p.name;$("storeProduct").append(o)});
 function headers(){return {"Authorization":"Bearer "+token,"Content-Type":"application/json"}}
