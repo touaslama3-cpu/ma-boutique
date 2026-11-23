@@ -40,7 +40,7 @@ $("searchCJ").onclick=async()=>{const keyword=$("searchKeyword").value.trim();if
 $("searchSeasonal").onclick=async()=>{
  const button=$("searchSeasonal");button.disabled=true;
  const area=$("seasonalResults");area.replaceChildren();
- const intro=document.createElement("p");intro.className="status";intro.textContent="Recherche de la nouvelle collection dans CJ. Les recherches sont limitées à 3 simultanément. Aucun produit ne sera associé automatiquement.";area.append(intro);
+ const intro=document.createElement("p");intro.className="status";intro.textContent="Recherche de la collection dans CJ, une demande à la fois pour respecter la limite fournisseur. Aucun produit ne sera associé automatiquement.";area.append(intro);
  let completed=0,failed=0;
  const jobs=products.map(p=>async()=>{
   const card=document.createElement("div");card.className="search-result";
@@ -64,7 +64,7 @@ $("searchSeasonal").onclick=async()=>{
    }
   }catch(e){failed++;detail.textContent="Erreur : "+e.message}
  });
- for(let i=0;i<jobs.length;i+=3){await Promise.all(jobs.slice(i,i+3).map(fn=>fn()));}
+ for(let i=0;i<jobs.length;i++){intro.textContent="Recherche CJ en cours : "+(i+1)+" / "+jobs.length+" produits. Pause automatique entre les demandes pour respecter la limite CJ.";await jobs[i]();if(i<jobs.length-1)await new Promise(resolve=>setTimeout(resolve,1200));}
  intro.textContent="Recherche terminée : "+completed+" recherche(s) réussie(s), "+failed+" erreur(s). Vérifie les photos, variantes, stocks et entrepôts avant toute association.";
  button.disabled=false;
 };
