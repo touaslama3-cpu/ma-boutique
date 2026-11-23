@@ -51,11 +51,123 @@ async function sendStatusEmail(order) {
   if (!response.ok) throw new Error("Resend returned HTTP " + response.status);
   return true;
 }
+
+async function handleAdminResource(req, res, resource) {
+  try {
+    if (resource === "reviews") {
+      if (req.method === "GET") {
+        const r = await db("product_reviews?select=id,user_id,product_id,order_id,rating,title,body,status,created_at&order=created_at.desc&limit=300");
+        const rows = await r.json();
+        if (!r.ok) return json(res, 502, { error: "Lecture des avis impossible." });
+        return json(res, 200, { reviews: rows });
+      }
+      const b = req.body || {};
+      if (!/^[0-9a-f-]{36}$/i.test(String(b.id || "")) || !["approved", "rejected"].includes(b.status)) {
+        return json(res, 400, { error: "Avis ou statut invalide." });
+      }
+      const r = await db("product_reviews?id=eq." + encodeURIComponent(b.id), {
+        method: "PATCH", body: JSON.stringify({ status: b.status })
+      });
+      const rows = await r.json();
+      if (!r.ok) return json(res, 502, { error: "Mise à jour de l’avis impossible." });
+      return json(res, 200, { review: rows[0] || null });
+    }
+
+    if (resource === "returns") {
+      if (req.method === "GET") {
+        const r = await db("return_requests?select=*,orders(customer_email,customer_name,amount_total,currency,fulfillment_status)&order=created_at.desc&limit=200");
+        const rows = await r.json();
+        if (!r.ok) return json(res, 502, { error: "Lecture des retours impossible." });
+        return json(res, 200, { returns: rows });
+      }
+      const b = req.body || {};
+      if (!/^[0-9a-f-]{36}$/i.test(String(b.id || "")) ||
+          !["requested", "approved", "rejected", "received", "refunded", "closed"].includes(b.status)) {
+        return json(res, 400, { error: "Demande ou statut invalide." });
+      }
+      const r = await db("return_requests?id=eq." + encodeURIComponent(b.id), {
+        method: "PATCH",
+        body: JSON.stringify({
+          status: b.status,
+          admin_note: typeof b.admin_note === "string" ? b.admin_note.slice(0, 1000) : null,
+          updated_at: new Date().toISOString()
+        })
+      });
+      const rows = await r.json();
+      if (!r.ok) return json(res, 502, { error: "Mise à jour du retour impossible." });
+      return json(res, 200, { return_request: rows[0] || null });
+    }
+
+    if (resource === "promotions") {
+      if (req.method === "GET") {
+        const r = await db("promotion_codes?select=id,code,discount_type,discount_value,minimum_amount,max_uses,uses_count,starts_at,expires_at,active&order=created_at.desc");
+        const rows = await r.json();
+        if (!r.ok) return json(res, 502, { error: "Lecture des codes impossible." });
+        return json(res, 200, { codes: rows });
+      }
+      const b = req.body || {};
+      if (req.method === "PATCH") {
+        if (!/^[0-9a-f-]{36}$/i.test(String(b.id || "")) || typeof b.active !== "boolean") {
+          return json(res, 400, { error: "Identifiant ou statut invalide." });
+        }
+        const r = await db("promotion_codes?id=eq." + encodeURIComponent(b.id), {
+          method: "PATCH", body: JSON.stringify({ active: b.active })
+        });
+        const rows = await r.json();
+        if (!r.ok) return json(res, 502, { error: "Mise à jour impossible." });
+        return json(res, 200, { code: rows[0] || null });
+      }
+      const code = String(b.code || "").trim().toUpperCase();
+      const type = String(b.discount_type || "percent");
+      const value = Number(b.discount_value);
+      const minimum = Number(b.minimum_amount || 0);
+      const maxUses = b.max_uses == null || b.max_uses === "" ? null : Number(b.max_uses);
+      const parseDate = value => {
+        if (!value) return null;
+        const parsed = Date.parse(value);
+        return Number.isFinite(parsed) ? new Date(parsed).toISOString() : "invalid";
+      };
+      const starts = parseDate(b.starts_at), expires = parseDate(b.expires_at);
+      if (!/^[A-Z0-9_-]{3,40}$/.test(code) || !["percent", "fixed"].includes(type) ||
+          !Number.isInteger(value) || value < 1 || (type === "percent" && value > 90) ||
+          (type === "fixed" && value > 100000) || !Number.isInteger(minimum) || minimum < 0 ||
+          (maxUses !== null && (!Number.isInteger(maxUses) || maxUses < 1)) ||
+          starts === "invalid" || expires === "invalid" ||
+          (starts && expires && Date.parse(starts) >= Date.parse(expires))) {
+        return json(res, 400, { error: "Paramètres de promotion invalides." });
+      }
+      const payload = {
+        code, discount_type: type, discount_value: value, minimum_amount: minimum,
+        max_uses: maxUses, active: true, starts_at: starts, expires_at: expires
+      };
+      const r = await db("promotion_codes", { method: "POST", body: JSON.stringify(payload) });
+      const rows = await r.json();
+      if (!r.ok) return json(res, r.status === 409 ? 409 : 502, {
+        error: r.status === 409 ? "Ce code existe déjà." : "Création du code impossible."
+      });
+      return json(res, 201, { code: rows[0] });
+    }
+    return json(res, 404, { error: "Ressource inconnue." });
+  } catch (error) {
+    console.error("Admin auxiliary resource error:", resource, error && error.message);
+    return json(res, 500, { error: "Erreur interne." });
+  }
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
-  if (!["GET", "PATCH"].includes(req.method)) { res.setHeader("Allow", "GET, PATCH"); return json(res, 405, { error: "Méthode non autorisée." }); }
+  const resource = String(req.query?.resource || "");
+  if (resource && !["promotions", "returns", "reviews"].includes(resource)) {
+    return json(res, 404, { error: "Ressource inconnue." });
+  }
+  const allowedMethods = resource === "promotions" ? ["GET", "POST", "PATCH"] : ["GET", "PATCH"];
+  if (!allowedMethods.includes(req.method)) {
+    res.setHeader("Allow", allowedMethods.join(", "));
+    return json(res, 405, { error: "Méthode non autorisée." });
+  }
   if (!authorized(req)) return json(res, 401, { error: "Accès refusé." });
   if (!SUPABASE_URL || !SERVICE_KEY) return json(res, 503, { error: "Base de données non configurée." });
+  if (resource) return handleAdminResource(req, res, resource);
   try {
     if (req.method === "GET") {
       const response = await db("orders?select=*&order=created_at.desc&limit=200");
