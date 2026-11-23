@@ -47,7 +47,7 @@ Dernière mise à jour : 23 novembre 2026
 - Envoi automatique de commandes CJ : ne pas activer sans validation des variantes, coûts, stocks et livraison.
 - Codes promo au checkout : interface d'administration prête, logique de réduction Stripe à terminer.
 - Factures PDF : pas de génération avant validation des informations légales et fiscales du vendeur.
-- Le 23 novembre 2026, le déploiement de production Vercel `0ffa030291c2ae044192a26233ef458613ca3492` est READY et les alias `taw.co`, `www.taw.co` et `tawco.vercel.app` lui sont rattachés. La limite Hobby de 12 fonctions a été corrigée en regroupant les API admin ; le déploiement de production a abouti.
+- Le 23 novembre 2026, le déploiement de production Vercel `2098671934e83ff74e1253220bb73ab206d8b7c3` est READY et les alias `taw.co`, `www.taw.co` et `tawco.vercel.app` lui sont rattachés. La limite Hobby de 12 fonctions a été corrigée en regroupant les API admin ; le déploiement de production a abouti.
 - La page publique et la page publiée dans `public/` conservent le verrou de maintenance.
 
 
@@ -62,7 +62,7 @@ Dernière mise à jour : 23 novembre 2026
 - Les codes promotionnels sont administrables, mais leur application au montant Stripe reste à développer et tester.
 - Les premières interfaces/API de retours et de modération des avis sont présentes ; le statut « remboursé » ne déclenche pas un remboursement Stripe.
 - Les factures PDF attendent les véritables coordonnées légales et fiscales.
-- Le dernier déploiement de production est désormais READY sur le commit `0ffa030291c2ae044192a26233ef458613ca3492`.
+- Le dernier déploiement de production est désormais READY sur le commit `2098671934e83ff74e1253220bb73ab206d8b7c3`.
 
 ### Suite à réaliser
 1. Associer les 15 produits du catalogue à leurs vrais produits, variantes, SKU et identifiants CJ.
@@ -91,7 +91,7 @@ Dernière mise à jour : 23 novembre 2026
 - Correction de l'échec Vercel : le déploiement précédent dépassait la limite Hobby de 12 fonctions serverless.
 - Regroupement des routes d'administration des avis, retours et promotions dans `api/admin-orders.js`, avec réécritures `vercel.json` qui conservent les URL déjà utilisées par l'interface.
 - Retrait de l'export DSers, qui ne correspond plus au flux fournisseur CJ retenu. Les champs de téléphone Stripe et leur enregistrement Supabase sont déjà présents sur `main` ; ne pas refaire cette modification.
-- PR GitHub #19 fusionnée. Déploiement de production Vercel READY sur le commit `0ffa030291c2ae044192a26233ef458613ca3492`.
+- PR GitHub #19 fusionnée. Déploiement de production Vercel READY sur le commit `2098671934e83ff74e1253220bb73ab206d8b7c3`.
 - L'écran de maintenance est présent dans `index.html` et `public/index.html`. Le bouton de paiement est désactivé et la variable `TAWCO_CHECKOUT_ENABLED` n'est pas définie en production : le serveur refuse donc les paiements.
 - Variables de production présentes : Supabase URL/clé serveur, Stripe secret/webhook, CJ API key, Resend API key et expéditeur `ORDER_FROM_EMAIL`. La vérification effective du domaine Resend et l'envoi réel d'un e-mail restent à confirmer.
 - Supabase Security Advisor ne remonte aucun finding de sécurité au contrôle du 23 novembre. Les alertes de performance portent uniquement sur des index non encore utilisés.
@@ -111,3 +111,9 @@ Dernière mise à jour : 23 novembre 2026
 10. Garder maintenance et paiements désactivés jusqu'à autorisation explicite d'ouverture.
 
 **Consigne de reprise :** ne pas refaire la vérification du schéma, des tables, de la présence des variables Vercel ni du déploiement READY sans raison. Priorité immédiate : associer les vrais produits/variantes CJ et obtenir les devis France. Ne jamais activer les paiements ou envoyer une commande CJ réelle sans validation explicite.
+
+
+## Complément de reprise — outils CJ du 23 novembre 2026
+- La page `admin-cj.html` dispose maintenant d'une recherche du catalogue CJ par nom et entrepôt, du chargement des variantes et stocks, et d'un calcul de devis de livraison vers la France avec code postal facultatif.
+- Les devis sont enregistrés dans `supplier_quote_checks` en USD. La conversion en EUR, le coût de revient et les marges restent à finaliser.
+- Aucune correspondance ni aucun devis n'a été créé automatiquement : les tables sont encore vides. Il faut choisir les références CJ réellement conformes aux produits TAW, tailles et couleurs. Ne jamais inventer ces correspondances.
