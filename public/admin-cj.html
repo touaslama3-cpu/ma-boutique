@@ -5,42 +5,27 @@
 </style></head><body><main class="wrap">
 <h1>TAW.co — Configuration CJdropshipping</h1><p class="muted">Espace technique non indexé. Les identifiants sont utilisés uniquement en mémoire dans cette page et ne sont jamais enregistrés dans le navigateur.</p>
 <section class="card"><h2>1. Accès administrateur</h2><label>Jeton administrateur (TAWCO_ADMIN_TOKEN)<input id="token" type="password" autocomplete="off" placeholder="Coller le jeton administrateur"></label><div class="row" style="margin-top:10px"><button id="load" type="button">Charger les correspondances</button><button class="secondary" id="logout" type="button">Effacer le jeton</button></div><p id="authStatus" class="status">Saisissez le jeton pour accéder aux références privées.</p></section>
-<section class="card"><h2>2. Rechercher un produit dans CJ</h2><p class="muted">Recherche le catalogue fournisseur par nom. Choisis uniquement un résultat qui correspond exactement au produit TAW, à ses photos et à sa catégorie. Les résultats ne créent aucune correspondance automatiquement.</p><div class="grid"><label>Produit à rechercher<input id="searchKeyword" placeholder="Ex. T-shirt essentiel femme"></label><label>Entrepôt pour le stock<select id="searchWarehouse"><option value="ALL">Tous les entrepôts vérifiés</option><option value="FR">France</option><option value="DE">Allemagne</option><option value="ES">Espagne</option><option value="PL">Pologne</option><option value="CN">Chine</option></select></label></div><button id="searchCJ" type="button" style="margin-top:12px">Rechercher dans CJ</button><button id="searchSeasonal" type="button" class="secondary" style="margin:12px 0 0 8px">Rechercher les 30 produits de la collection</button><div id="seasonalResults" style="margin-top:12px"></div><div id="searchStatus" class="status" style="margin-top:12px">Choisis un produit TAW puis lance la recherche.</div><div id="searchResults"></div></section>
+<section class="card"><h2>2. Rechercher un produit dans CJ</h2><p class="muted">Recherche le catalogue fournisseur par nom. Choisis uniquement un résultat qui correspond exactement au produit TAW, à ses photos et à sa catégorie. Les résultats ne créent aucune correspondance automatiquement.</p><div class="grid"><label>Produit à rechercher<input id="searchKeyword" placeholder="Ex. T-shirt essentiel femme"></label><label>Entrepôt pour le stock<select id="searchWarehouse"><option value="ALL">Tous les entrepôts vérifiés</option><option value="FR">France</option><option value="DE">Allemagne</option><option value="ES">Espagne</option><option value="PL">Pologne</option><option value="CN">Chine</option></select></label></div><button id="searchCJ" type="button" style="margin-top:12px">Rechercher dans CJ</button><button id="searchSeasonal" type="button" class="secondary" style="margin:12px 0 0 8px">Rechercher les 30 produits de la collection</button><button id="autoSyncCJ" type="button" style="margin:12px 0 0 8px">Automatiser la synchronisation des 15 produits</button><div id="autoSyncStatus" class="status" style="margin-top:10px">En attente de la synchronisation sécurisée.</div><div id="seasonalResults" style="margin-top:12px"></div><div id="searchStatus" class="status" style="margin-top:12px">Choisis un produit TAW puis lance la recherche.</div><div id="searchResults"></div></section>
 <section class="card"><h2>3. Récupérer les variantes d'un produit CJ d'un produit CJ</h2><p class="muted">Dans CJ, ouvrez le produit exact, copiez son identifiant produit, puis chargez ses variantes. Ne sélectionnez qu'une référence qui correspond réellement au produit et aux photos TAW.co.</p><div class="grid"><label>Produit TAW.co<select id="storeProduct"></select></label><label>Identifiant produit CJ<input id="cjProduct" placeholder="Identifiant exact du produit CJ"></label></div><button id="fetchProduct" style="margin-top:12px">Charger les variantes CJ</button><div id="productStatus" class="status" style="margin-top:12px">En attente du produit CJ.</div><div id="variantArea" class="hidden"><div class="grid" style="margin-top:12px"><label>Variante CJ<select id="variant"></select></label><label>Clé de variante TAW<input id="variantKey" placeholder="ex. noir|m" maxlength="100"></label><label>Pays d'expédition<select id="origin"><option value="CN">Chine</option></select></label><label>Transporteur CJ (nom exact)<input id="logistic" placeholder="Nom exact renvoyé par CJ"></label><label>Coût unitaire fournisseur (USD)<input id="cost" type="number" min="0" step=".01"></label></div><div class="grid" style="margin-top:12px"><label>Code postal de destination (facultatif)<input id="destinationZip" maxlength="12" placeholder="Ex. 59280"></label><div style="align-self:end"><button id="quoteShipping" type="button">Calculer les frais vers la France</button></div></div><div id="shippingResults" class="status" style="margin-top:10px">Les devis seront enregistrés dans l’historique Supabase en USD.</div><button id="saveMapping" style="margin-top:12px">Enregistrer cette correspondance</button></div></section>
 <section class="card"><h2>4. Correspondances enregistrées</h2><div id="mappings" class="muted">Connectez-vous puis chargez les correspondances.</div></section>
 <section class="card"><h2>5. Avant toute ouverture des ventes</h2><p class="muted">Les correspondances doivent être vérifiées une par une : produit exact, taille/couleur, stock, pays d'expédition, transporteur et coût. Les frais de livraison vers la France doivent ensuite être calculés pour chaque variante et code postal. Le paiement Stripe reste bloqué et aucune commande CJ ne sera payée automatiquement depuis cette page.</p></section>
 </main><script>
 const products=[
-{id:101,name:"Robe de fêtes en velours",keyword:"women velvet evening dress",gender:"women"},
-{id:102,name:"Pull doux femme",keyword:"women's soft knit pullover sweater",gender:"women"},
-{id:103,name:"Cardigan femme",keyword:"women's knitted cardigan button front",gender:"women"},
-{id:104,name:"Manteau hiver femme",keyword:"women's winter long padded coat",gender:"women"},
-{id:105,name:"Ensemble jogging homme",keyword:"men's tracksuit set sweatshirt jogger",gender:"men"},
-{id:106,name:"Pull maille homme",keyword:"men's knitted crew neck sweater",gender:"men"},
-{id:107,name:"Sweat à capuche homme",keyword:"men's hooded sweatshirt hoodie",gender:"men"},
-{id:108,name:"Veste hiver homme",keyword:"men's winter padded jacket",gender:"men"},
-{id:109,name:"Chemise à carreaux homme",keyword:"men's plaid flannel shirt",gender:"men"},
-{id:110,name:"Pantalon homme",keyword:"men's casual straight leg trousers",gender:"men"},
-{id:111,name:"Polo homme",keyword:"men's short sleeve polo shirt",gender:"men"},
-{id:112,name:"T-shirt homme",keyword:"men's basic cotton crew neck t shirt",gender:"men"},
-{id:113,name:"Jean homme",keyword:"men's denim jeans straight fit",gender:"men"},
-{id:114,name:"Veste zippée homme",keyword:"men's casual zip up jacket",gender:"men"},
-{id:115,name:"Écharpe chaude unisexe",keyword:"unisex winter knitted scarf",gender:"unisex"},
-{id:116,name:"Chaussures homme",keyword:"men's casual sneakers shoes",gender:"men"},
-{id:117,name:"Chemise casual homme",keyword:"men's casual button down shirt",gender:"men"},
-{id:118,name:"Casquette homme",keyword:"men's baseball cap",gender:"men"},
-{id:119,name:"Lunettes homme",keyword:"men's sunglasses",gender:"men"},
-{id:120,name:"Montre homme",keyword:"men's wrist watch",gender:"men"},
-{id:121,name:"Pull hiver femme",keyword:"women winter knitted sweater",gender:"women"},
-{id:122,name:"Pull col roulé femme",keyword:"women turtleneck knit sweater",gender:"women"},
-{id:123,name:"Pantalon femme",keyword:"women casual trousers pants",gender:"women"},
-{id:124,name:"Jean femme",keyword:"women denim jeans",gender:"women"},
-{id:125,name:"Sweat femme",keyword:"women fleece sweatshirt",gender:"women"},
-{id:126,name:"Bottes hiver homme",keyword:"men winter boots",gender:"men"},
-{id:127,name:"Bottes hiver femme",keyword:"women winter ankle boots",gender:"women"},
-{id:128,name:"Bonnet hiver unisexe",keyword:"winter knitted beanie hat",gender:"unisex"},
-{id:129,name:"Gants hiver unisexe",keyword:"winter thermal knitted gloves",gender:"unisex"},
-{id:130,name:"Pull col roulé homme",keyword:"men turtleneck winter sweater",gender:"men"}
+{id:101,name:"T-shirt essentiel femme",keyword:"women basic cotton t shirt",gender:"women"},
+{id:102,name:"Chemise oversize femme",keyword:"women oversized button shirt",gender:"women"},
+{id:103,name:"Robe casual",keyword:"women casual dress",gender:"women"},
+{id:104,name:"Ensemble détente femme",keyword:"women lounge matching set",gender:"women"},
+{id:105,name:"Jean coupe droite femme",keyword:"women straight leg denim jeans",gender:"women"},
+{id:106,name:"T-shirt basique homme",keyword:"men basic cotton t shirt",gender:"men"},
+{id:107,name:"Sweat à capuche homme",keyword:"men hooded sweatshirt hoodie",gender:"men"},
+{id:108,name:"Chemise casual homme",keyword:"men casual button down shirt",gender:"men"},
+{id:109,name:"Jean homme",keyword:"men straight fit denim jeans",gender:"men"},
+{id:110,name:"Veste légère unisexe",keyword:"unisex lightweight casual jacket",gender:"unisex"},
+{id:111,name:"Baskets lifestyle",keyword:"lifestyle casual sneakers shoes",gender:"unisex"},
+{id:112,name:"Sneakers minimalistes",keyword:"minimalist casual sneakers shoes",gender:"unisex"},
+{id:113,name:"Sac porté épaule",keyword:"shoulder handbag",gender:"unisex"},
+{id:114,name:"Lunettes de soleil",keyword:"sunglasses fashion eyewear",gender:"unisex"},
+{id:115,name:"Casquette urbaine",keyword:"urban baseball cap",gender:"unisex"}
 ];
 const $=id=>document.getElementById(id);let token="",variants=[],selectedQuote=null,productWarehouses=[];
 products.forEach(p=>{const o=document.createElement("option");o.value=p.id;o.textContent=p.id+" — "+p.name;$("storeProduct").append(o)});
@@ -52,6 +37,25 @@ $("load").onclick=loadMappings;$("logout").onclick=()=>{$("token").value="";toke
 $("storeProduct").addEventListener("change",()=>{$("searchKeyword").value=products.find(p=>p.id===Number($("storeProduct").value))?.name||""});
 $("searchKeyword").value=products[0].name;
 $("searchCJ").onclick=async()=>{const keyword=$("searchKeyword").value.trim();if(!keyword){$("searchStatus").textContent="Saisis un nom de produit.";return}const button=$("searchCJ");button.disabled=true;$("searchStatus").textContent="Recherche du catalogue CJ…";$("searchResults").replaceChildren();try{const url="/api/cj-products?keyword="+encodeURIComponent(keyword)+"&warehouse="+encodeURIComponent($("searchWarehouse").value);const r=await fetch(url,{cache:"no-store"});const data=await r.json();if(!r.ok)throw new Error(data.error||"Recherche CJ impossible.");const results=Array.isArray(data.products)?data.products:[];$("searchStatus").textContent=results.length+" résultat(s) CJ trouvés. Vérifie chaque produit avant de l'associer à TAW.";for(const p of results){const row=document.createElement("div");row.className="search-result";const info=document.createElement("div");const name=document.createElement("b");name.textContent=p.name||"Produit CJ";const detail=document.createElement("div");detail.className="muted";detail.textContent="ID CJ : "+p.supplierProductId+" · SKU : "+(p.sku||"—")+" · Stock vérifié : "+Number(p.stockAvailable||0)+" · Entrepôt : "+(p.warehouseFilter||"—");info.append(name,detail);const use=document.createElement("button");use.type="button";use.className="secondary";use.textContent="Utiliser ce produit";use.onclick=()=>{$("cjProduct").value=p.supplierProductId;loadCjProduct(p.supplierProductId)};row.append(info,use);$("searchResults").append(row)}if(!results.length)$("searchResults").textContent="Aucun résultat. Essaie un terme plus court ou un autre entrepôt."}catch(e){$("searchStatus").textContent=e.message}finally{button.disabled=false}};
+$("autoSyncCJ").onclick=async()=>{
+ token=$("token").value.trim();
+ if(!token){$("autoSyncStatus").textContent="Saisis d'abord le jeton administrateur.";return}
+ const button=$("autoSyncCJ");button.disabled=true;
+ const status=$("autoSyncStatus");let offset=0,totalSaved=0,done=false;
+ status.textContent="Démarrage : synchronisation sécurisée des 15 produits TAW.co…";
+ try{
+  while(!done){
+   const response=await fetch("/api/admin-cj-sync",{method:"POST",headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify({offset,warehouse:$("searchWarehouse").value})});
+   const data=await response.json();if(!response.ok)throw new Error(data.error||"Erreur de synchronisation");
+   totalSaved+=data.results.reduce((n,x)=>n+x.saved,0);
+   offset=data.next_offset;done=data.done;
+   status.textContent="Synchronisation : "+offset+" / 15 produits traités · "+totalSaved+" candidats CJ enregistrés.\n"+data.results.map(x=>x.store_product_id+" — "+x.name+" : "+x.saved+" candidat(s)").join("\n");
+  }
+  status.textContent+="\nTerminé. Les candidats sont enregistrés dans Supabase pour vérification. Aucun produit n'est publié ni associé automatiquement.";
+  await loadMappings();
+ }catch(e){status.textContent+="\nArrêt : "+e.message+"\nTu peux relancer : les candidats déjà enregistrés sont conservés."}
+ finally{button.disabled=false}
+};
 $("searchSeasonal").onclick=async()=>{
  const button=$("searchSeasonal");button.disabled=true;
  const area=$("seasonalResults");area.replaceChildren();
