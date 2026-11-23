@@ -71,10 +71,10 @@ module.exports = async function handler(req, res) {
           !/^[A-Za-z0-9-]{8,80}$/.test(cjProductId) ||
           !/^[A-Za-z0-9-]{8,80}$/.test(variantId) ||
           !/^[A-Z]{2}$/.test(origin) ||
-          (zip && !/^[0-9A-Za-z -]{3,12}$/.test(zip)) ||
+          (zip && !/^\d{5}$/.test(zip)) ||
           !Number.isInteger(quantity) || quantity < 1 || quantity > 20 ||
           !Number.isFinite(productCost) || productCost < 0 || productCost > 10000) {
-        return json(res, 400, { error: "Données de variante ou de livraison invalides." });
+        return json(res, 400, { error: "Données de variante ou de livraison invalides. Le code postal français doit contenir 5 chiffres." });
       }
       try {
         const quoteData = await cj("/logistic/freightCalculate", "POST", {
@@ -84,30 +84,45 @@ module.exports = async function handler(req, res) {
           products: [{ vid: variantId, quantity }]
         });
         const options = Array.isArray(quoteData) ? quoteData : [];
-        if (!options.length) return json(res, 200, { quotes: [], message: "CJ n'a renvoyé aucun transporteur pour cette variante." });
-        const checkedAt = new Date().toISOString();
-        const records = options.map(option => {
+        const normalized = options.map(option => {
+          const rawShipping = option.totalPostageFee ?? option.logisticPrice;
+          const shipping = Number(rawShipping);
+          if (rawShipping == null || !Number.isFinite(shipping) || shipping < 0) return null;
           const aging = String(option.logisticAging || "");
           const days = aging.match(/(\d{1,3})\s*(?:-|~|à)\s*(\d{1,3})/i);
-          const shipping = Number(option.totalPostageFee ?? option.logisticPrice ?? 0);
           return {
-            store_product_id: productId,
-            variant_key: variantKey,
-            cj_product_id: cjProductId,
-            cj_variant_id: variantId,
-            destination_country_code: "FR",
-            currency: "USD",
-            product_cost: Number(productCost.toFixed(2)),
-            shipping_cost: Number.isFinite(shipping) && shipping >= 0 ? Number(shipping.toFixed(2)) : 0,
-            shipping_method_id: String(option.logisticId || option.logisticCode || ""),
-            shipping_method_name: String(option.logisticName || "Transporteur CJ").slice(0, 160),
-            delivery_min_days: days ? Number(days[1]) : null,
-            delivery_max_days: days ? Number(days[2]) : null,
-            availability: true,
-            raw_quote: option,
-            checked_at: checkedAt
+            carrier: String(option.logisticName || "Transporteur CJ").slice(0, 160),
+            methodId: String(option.logisticId || option.logisticCode || "").slice(0, 120),
+            deliveryWindowDays: aging,
+            deliveryMinDays: days ? Number(days[1]) : null,
+            deliveryMaxDays: days ? Number(days[2]) : null,
+            shippingUsd: Number(shipping.toFixed(2)),
+            taxesUsd: Number(option.taxesFee || 0),
+            customsFeeUsd: Number(option.clearanceOperationFee || 0),
+            raw: option
           };
-        });
+        }).filter(Boolean);
+        if (!normalized.length) {
+          return json(res, 200, { quotes: [], message: "CJ n'a renvoyé aucun tarif de transport exploitable pour cette variante." });
+        }
+        const checkedAt = new Date().toISOString();
+        const records = normalized.map(option => ({
+          store_product_id: productId,
+          variant_key: variantKey,
+          cj_product_id: cjProductId,
+          cj_variant_id: variantId,
+          destination_country_code: "FR",
+          currency: "USD",
+          product_cost: Number(productCost.toFixed(2)),
+          shipping_cost: option.shippingUsd,
+          shipping_method_id: option.methodId,
+          shipping_method_name: option.carrier,
+          delivery_min_days: option.deliveryMinDays,
+          delivery_max_days: option.deliveryMaxDays,
+          availability: true,
+          raw_quote: option.raw,
+          checked_at: checkedAt
+        }));
         const saved = await db("supplier_quote_checks", {
           method: "POST",
           body: JSON.stringify(records),
@@ -120,20 +135,7 @@ module.exports = async function handler(req, res) {
         }
         return json(res, 200, {
           checked_at: checkedAt,
-          quotes: options.map(option => {
-            const aging = String(option.logisticAging || "");
-            const days = aging.match(/(\d{1,3})\s*(?:-|~|à)\s*(\d{1,3})/i);
-            return {
-              carrier: String(option.logisticName || "Transporteur CJ"),
-              methodId: String(option.logisticId || option.logisticCode || ""),
-              deliveryWindowDays: aging,
-              deliveryMinDays: days ? Number(days[1]) : null,
-              deliveryMaxDays: days ? Number(days[2]) : null,
-              shippingUsd: Number(option.totalPostageFee ?? option.logisticPrice ?? 0),
-              taxesUsd: Number(option.taxesFee || 0),
-              customsFeeUsd: Number(option.clearanceOperationFee || 0)
-            };
-          })
+          quotes: normalized.map(({ raw, ...option }) => option)
         });
       } catch (error) {
         console.error("CJ admin freight quote error", error.code, error.requestId);
