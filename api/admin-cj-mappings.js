@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const { cj } = require("./_cj");
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_TOKEN = process.env.TAWCO_ADMIN_TOKEN;
@@ -56,6 +57,90 @@ module.exports = async function handler(req, res) {
       return json(res, 200, { mapping: rows[0] || null });
     }
 
+    if (body.action === "quote") {
+      const productId = Number(body.store_product_id);
+      const variantKey = String(body.variant_key || "").trim().toLowerCase();
+      const cjProductId = String(body.cj_product_id || "").trim();
+      const variantId = String(body.cj_variant_id || "").trim();
+      const origin = String(body.origin_country_code || "CN").trim().toUpperCase();
+      const zip = String(body.destination_zip || "").trim();
+      const quantity = Number(body.quantity || 1);
+      const productCost = Number(body.unit_cost_usd || 0);
+      if (!Number.isInteger(productId) || productId < 101 || productId > 115 ||
+          !variantKey || variantKey.length > 100 ||
+          !/^[A-Za-z0-9-]{8,80}$/.test(cjProductId) ||
+          !/^[A-Za-z0-9-]{8,80}$/.test(variantId) ||
+          !/^[A-Z]{2}$/.test(origin) ||
+          (zip && !/^[0-9A-Za-z -]{3,12}$/.test(zip)) ||
+          !Number.isInteger(quantity) || quantity < 1 || quantity > 20 ||
+          !Number.isFinite(productCost) || productCost < 0 || productCost > 10000) {
+        return json(res, 400, { error: "Données de variante ou de livraison invalides." });
+      }
+      try {
+        const quoteData = await cj("/logistic/freightCalculate", "POST", {
+          startCountryCode: origin,
+          endCountryCode: "FR",
+          ...(zip ? { zip } : {}),
+          products: [{ vid: variantId, quantity }]
+        });
+        const options = Array.isArray(quoteData) ? quoteData : [];
+        if (!options.length) return json(res, 200, { quotes: [], message: "CJ n'a renvoyé aucun transporteur pour cette variante." });
+        const checkedAt = new Date().toISOString();
+        const records = options.map(option => {
+          const aging = String(option.logisticAging || "");
+          const days = aging.match(/(\d{1,3})\s*(?:-|~|à)\s*(\d{1,3})/i);
+          const shipping = Number(option.totalPostageFee ?? option.logisticPrice ?? 0);
+          return {
+            store_product_id: productId,
+            variant_key: variantKey,
+            cj_product_id: cjProductId,
+            cj_variant_id: variantId,
+            destination_country_code: "FR",
+            currency: "USD",
+            product_cost: Number(productCost.toFixed(2)),
+            shipping_cost: Number.isFinite(shipping) && shipping >= 0 ? Number(shipping.toFixed(2)) : 0,
+            shipping_method_id: String(option.logisticId || option.logisticCode || ""),
+            shipping_method_name: String(option.logisticName || "Transporteur CJ").slice(0, 160),
+            delivery_min_days: days ? Number(days[1]) : null,
+            delivery_max_days: days ? Number(days[2]) : null,
+            availability: true,
+            raw_quote: option,
+            checked_at: checkedAt
+          };
+        });
+        const saved = await db("supplier_quote_checks", {
+          method: "POST",
+          body: JSON.stringify(records),
+          headers: { Prefer: "return=representation" }
+        });
+        const savedRows = await saved.json();
+        if (!saved.ok) {
+          console.error("CJ quote history insert failed", saved.status, savedRows);
+          return json(res, 502, { error: "Devis reçu, mais son enregistrement dans l'historique Supabase a échoué." });
+        }
+        return json(res, 200, {
+          checked_at: checkedAt,
+          quotes: options.map(option => {
+            const aging = String(option.logisticAging || "");
+            const days = aging.match(/(\d{1,3})\s*(?:-|~|à)\s*(\d{1,3})/i);
+            return {
+              carrier: String(option.logisticName || "Transporteur CJ"),
+              methodId: String(option.logisticId || option.logisticCode || ""),
+              deliveryWindowDays: aging,
+              deliveryMinDays: days ? Number(days[1]) : null,
+              deliveryMaxDays: days ? Number(days[2]) : null,
+              shippingUsd: Number(option.totalPostageFee ?? option.logisticPrice ?? 0),
+              taxesUsd: Number(option.taxesFee || 0),
+              customsFeeUsd: Number(option.clearanceOperationFee || 0)
+            };
+          })
+        });
+      } catch (error) {
+        console.error("CJ admin freight quote error", error.code, error.requestId);
+        return json(res, 502, { error: "CJ n'a pas pu calculer les frais de livraison pour cette variante." });
+      }
+    }
+
     const productId = Number(body.store_product_id);
     const variantKey = String(body.variant_key || "default").trim().toLowerCase();
     const cjProductId = String(body.cj_product_id || "").trim();
@@ -83,6 +168,11 @@ module.exports = async function handler(req, res) {
       logistic_name: logistic,
       unit_cost_usd: Number(cost.toFixed(2)),
       is_active: body.is_active !== false,
+      shipping_method_id: typeof body.shipping_method_id === "string" && body.shipping_method_id.trim() ? body.shipping_method_id.trim().slice(0, 120) : null,
+      shipping_method_name: typeof body.shipping_method_name === "string" && body.shipping_method_name.trim() ? body.shipping_method_name.trim().slice(0, 160) : null,
+      shipping_delivery_min_days: Number.isInteger(Number(body.shipping_delivery_min_days)) && Number(body.shipping_delivery_min_days) >= 0 ? Number(body.shipping_delivery_min_days) : null,
+      shipping_delivery_max_days: Number.isInteger(Number(body.shipping_delivery_max_days)) && Number(body.shipping_delivery_max_days) >= 0 ? Number(body.shipping_delivery_max_days) : null,
+      shipping_checked_at: typeof body.shipping_checked_at === "string" && Number.isFinite(Date.parse(body.shipping_checked_at)) ? new Date(body.shipping_checked_at).toISOString() : null,
       verified_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
