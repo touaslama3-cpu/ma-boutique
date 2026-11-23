@@ -398,4 +398,22 @@ openProduct=function(id,updateUrl=true){
 };
 loadTawCJCatalog();
 
-</script><main id="taw-maintenance-screen" role="status" aria-live="polite"><section class="tm-card"><div class="tm-logo">TAW<span>.co</span></div><div class="tm-mark" aria-hidden="true">⚙</div><div class="tm-kicker">Boutique en préparation</div><h1>Nous revenons très bientôt.</h1><p>Notre boutique est temporairement en maintenance afin de finaliser les derniers réglages et de vous offrir une meilleure expérience.</p><a class="tm-account" href="/compte/">👤 Créer mon compte / Se connecter</a><div class="tm-foot">Merci pour votre patience et votre confiance.</div></section></main></body></html>
+</script><main id="taw-maintenance-screen" role="status" aria-live="polite"><section class="tm-card"><div class="tm-logo">TAW<span>.co</span></div><div class="tm-mark" aria-hidden="true">⚙</div><div class="tm-kicker">Boutique en préparation</div><h1>Nous revenons très bientôt.</h1><p>Notre boutique est temporairement en maintenance afin de finaliser les derniers réglages et de vous offrir une meilleure expérience.</p><a class="tm-account" href="/compte/">👤 Créer mon compte / Se connecter</a><div class="tm-foot">Merci pour votre patience et votre confiance.</div></section></main><script id="taw-private-preview-access">
+(function(){
+ const params=new URLSearchParams(window.location.search);
+ if(params.get("taw-preview")!== "taw-preview-107-8f4c2d91a7e63b5c") return;
+ const screen=document.getElementById("taw-maintenance-screen");
+ if(screen) screen.remove();
+ const banner=document.createElement("div");
+ banner.textContent="APERÇU PRIVÉ — TAW.co reste en maintenance · Paiements désactivés";
+ banner.style.cssText="position:sticky;top:0;z-index:999999;background:#173f33;color:white;text-align:center;padding:10px 14px;font:700 12px system-ui;letter-spacing:.3px";
+ document.body.prepend(banner);
+ window.addEventListener("load",function(){
+  if(typeof window.openProduct==="function") window.openProduct(107,false);
+  else {
+   const productLink=document.querySelector('[onclick*="openProduct(107"]');
+   if(productLink) productLink.click();
+  }
+ });
+})();
+</script></body></html>
