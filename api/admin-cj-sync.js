@@ -41,10 +41,11 @@ module.exports=async function handler(req,res){
  if(req.method!=="POST")return res.status(405).json({error:"Méthode non autorisée."});
  if(!authorized(req))return res.status(401).json({error:"Accès refusé."});
  if(!SUPABASE_URL||!SERVICE_KEY)return res.status(503).json({error:"Supabase non configuré."});
+ let offset=0;
  const requestedOffset=Number(req.body?.offset??0),warehouse=String(req.body?.warehouse||"ALL").toUpperCase();
  if(!Number.isInteger(requestedOffset)||requestedOffset<0||requestedOffset>15||!["ALL","FR","DE","ES","PL","CN","US","GB"].includes(warehouse))return res.status(400).json({error:"Paramètres invalides."});
  try {
-  let offset=requestedOffset;
+  offset=requestedOffset;
   // A fresh run resumes at the first product that has no saved candidates yet.
   if(offset===0){
    const existing=await db("supplier_product_candidates?select=store_product_id",{method:"GET"});
@@ -68,9 +69,9 @@ module.exports=async function handler(req,res){
    .map(x=>({...x,score:score(p,{name:x.name,category:x.category})}))
    .filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,12);
   if(candidates.length){
-   const rows=candidates.map(x=>({store_product_id:p[0],store_product_name:p[1],cj_product_id:x.id,cj_product_name:x.name,cj_sku:x.sku,image_url:x.image,category:x.category,stock_available:x.stock,warehouse_filter:warehouse,match_score:x.score,match_status:"needs_review"}));
+   const rows=candidates.map(x=>({store_product_id:p[0],store_product_name:p[1],cj_product_id:x.id,cj_product_name:x.name,cj_sku:x.sku,image_url:x.image,category:x.category,stock_available:x.stock,warehouse_filter:warehouse,match_score:x.score,match_status:"needs_review",variants:[],warehouses:[],checked_at:new Date().toISOString()}));
    const saved=await db("supplier_product_candidates?on_conflict=store_product_id,cj_product_id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=representation"},body:JSON.stringify(rows)});
-   if(!saved.ok)throw new Error("CANDIDATE_SAVE_FAILED");
+   if(!saved.ok){const reason=(await saved.text()).slice(0,500);console.error("Supabase candidate insert failed",saved.status,reason);throw new Error("CANDIDATE_SAVE_FAILED");}
   }
   const next=offset+1;
   return res.status(200).json({ok:true,offset:next,previous_offset:offset,next_offset:next,processed:1,results:[{store_product_id:p[0],name:p[1],found:raw.length,saved:candidates.length}],done:next>=15});
