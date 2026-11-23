@@ -40,7 +40,7 @@ $("searchCJ").onclick=async()=>{const keyword=$("searchKeyword").value.trim();if
 $("searchSeasonal").onclick=async()=>{
  const button=$("searchSeasonal");button.disabled=true;
  const area=$("seasonalResults");area.replaceChildren();
- const intro=document.createElement("p");intro.className="status";intro.textContent="Recherche de la nouvelle collection dans CJ. Les recherches sont limitées à 3 simultanément. Aucun produit ne sera associé automatiquement.";area.append(intro);
+ const intro=document.createElement("p");intro.className="status";intro.textContent="Recherche de la collection dans CJ, une demande à la fois pour respecter la limite fournisseur. Aucun produit ne sera associé automatiquement.";area.append(intro);
  let completed=0,failed=0;
  const jobs=products.map(p=>async()=>{
   const card=document.createElement("div");card.className="search-result";
@@ -55,16 +55,16 @@ $("searchSeasonal").onclick=async()=>{
    if(!results.length){resultsBox.textContent="Aucun résultat trouvé pour cette recherche.";return}
    for(const item of results){
     const row=document.createElement("div");row.className="search-result";
-    const meta=document.createElement("div");const n=document.createElement("b");n.textContent=item.name||"Produit CJ";
+    const meta=document.createElement("div");const thumb=document.createElement("img");thumb.src=item.image||"";thumb.alt=item.name||"Photo produit CJ";thumb.loading="lazy";thumb.style.cssText="width:76px;height:88px;object-fit:contain;border-radius:8px;float:left;margin:0 10px 6px 0;background:#f7f8f4";const n=document.createElement("b");n.textContent=item.name||"Produit CJ";
     const d=document.createElement("div");d.className="muted";d.textContent="ID "+item.supplierProductId+" · SKU "+(item.sku||"—")+" · stock "+Number(item.stockAvailable||0)+" · "+(item.warehouseFilter||"—");
-    meta.append(n,d);
+    meta.append(thumb,n,d);
     const use=document.createElement("button");use.type="button";use.className="secondary";use.textContent="Vérifier cette référence";
     use.onclick=()=>{$("storeProduct").value=String(p.id);$("searchKeyword").value=p.keyword;$("cjProduct").value=item.supplierProductId;loadCjProduct(item.supplierProductId);window.scrollTo({top:$("storeProduct").getBoundingClientRect().top+window.scrollY-30,behavior:"smooth"});};
     row.append(meta,use);resultsBox.append(row);
    }
   }catch(e){failed++;detail.textContent="Erreur : "+e.message}
  });
- for(let i=0;i<jobs.length;i+=3){await Promise.all(jobs.slice(i,i+3).map(fn=>fn()));}
+ for(let i=0;i<jobs.length;i++){intro.textContent="Recherche CJ en cours : "+(i+1)+" / "+jobs.length+" produits. Traitement séquentiel sécurisé.";await jobs[i]();if(i<jobs.length-1)await new Promise(resolve=>setTimeout(resolve,2600));}
  intro.textContent="Recherche terminée : "+completed+" recherche(s) réussie(s), "+failed+" erreur(s). Vérifie les photos, variantes, stocks et entrepôts avant toute association.";
  button.disabled=false;
 };
@@ -72,7 +72,7 @@ async function loadCjProduct(pid){token=$("token").value.trim();$("cjProduct").v
 $("fetchProduct").onclick=()=>loadCjProduct($("cjProduct").value.trim());
 function invalidateQuote(){selectedQuote=null;const box=$("shippingResults");if(box)box.textContent="Paramètres modifiés : recalcule les frais de livraison avant d’enregistrer.";}
 $("origin").addEventListener("change",invalidateQuote);$("destinationZip").addEventListener("input",invalidateQuote);$("cost").addEventListener("input",invalidateQuote);$("variantKey").addEventListener("input",invalidateQuote);
-function showVariant(){const v=variants[Number($("variant").value)];if(!v)return;selectedQuote=null;$("shippingResults").textContent="Calcule les frais pour cette variante avant de l'enregistrer."; $("cost").value=Number(v.priceUsd||0).toFixed(2);if(!$("variantKey").value)$("variantKey").value=(v.name||v.sku||"variant").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")}
+function showVariant(){const v=variants[Number($("variant").value)];if(!v)return;selectedQuote=null;$("shippingResults").textContent="Calcule les frais pour cette variante avant de l'enregistrer."; $("cost").value=Number(v.priceUsd||0).toFixed(2);$("variantKey").value=(v.name||v.sku||("variant-"+(Number($("variant").value)+1))).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")}
 $("quoteShipping").onclick=async()=>{token=$("token").value.trim();const v=variants[Number($("variant").value)];if(!v)return;const button=$("quoteShipping");button.disabled=true;$("shippingResults").textContent="Calcul du transport CJ vers la France…";try{const data=await request("/api/admin-cj-mappings",{method:"POST",body:JSON.stringify({action:"quote",store_product_id:Number($("storeProduct").value),variant_key:$("variantKey").value.trim(),cj_product_id:$("cjProduct").value.trim(),cj_variant_id:String(v.variantId),origin_country_code:$("origin").value.trim().toUpperCase(),destination_zip:$("destinationZip").value.trim(),quantity:1,unit_cost_usd:Number($("cost").value)})});const box=$("shippingResults");box.replaceChildren();selectedQuote=null;if(!data.quotes?.length){box.textContent=data.message||"Aucun transporteur disponible.";return}const intro=document.createElement("div");intro.textContent="Devis enregistrés dans Supabase · montants en USD · choisis le transporteur qui convient :";box.append(intro);for(const q of data.quotes){const row=document.createElement("div");row.className="quote-option";const info=document.createElement("div");const name=document.createElement("b");name.textContent=q.carrier;const detail=document.createElement("div");detail.textContent="Transport : "+q.shippingUsd.toFixed(2)+" USD · Taxes : "+q.taxesUsd.toFixed(2)+" USD · Douane : "+q.customsFeeUsd.toFixed(2)+" USD · Délai : "+(q.deliveryWindowDays||"non communiqué");info.append(name,detail);const choose=document.createElement("button");choose.type="button";choose.className="secondary";choose.textContent="Choisir ce transporteur";choose.onclick=()=>{selectedQuote={...q,checkedAt:data.checked_at};$("logistic").value=q.carrier;box.querySelectorAll("button").forEach(b=>b.textContent="Choisir ce transporteur");choose.textContent="Transporteur sélectionné";};row.append(info,choose);box.append(row)}}catch(e){$("shippingResults").textContent=e.message}finally{button.disabled=false}};
 $("saveMapping").onclick=async()=>{token=$("token").value.trim();const v=variants[Number($("variant").value)];if(!v)return;const body={store_product_id:Number($("storeProduct").value),variant_key:$("variantKey").value.trim(),cj_product_id:$("cjProduct").value.trim(),cj_variant_id:String(v.variantId||""),cj_variant_sku:String(v.sku||""),origin_country_code:$("origin").value.trim().toUpperCase(),logistic_name:$("logistic").value.trim(),unit_cost_usd:Number($("cost").value),is_active:true,...(selectedQuote?{shipping_method_id:selectedQuote.methodId,shipping_method_name:selectedQuote.carrier,shipping_delivery_min_days:selectedQuote.deliveryMinDays,shipping_delivery_max_days:selectedQuote.deliveryMaxDays,shipping_checked_at:selectedQuote.checkedAt}: {})};try{const j=await request("/api/admin-cj-mappings",{method:"POST",body:JSON.stringify(body)});$("productStatus").textContent="Correspondance enregistrée : "+j.mapping.variant_key+(selectedQuote?" · transport "+selectedQuote.carrier+" sélectionné":" · sans devis transport sélectionné");await loadMappings()}catch(e){$("productStatus").textContent=e.message}};
 </script></body></html>
