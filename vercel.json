@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/admin-promotions",
+      "destination": "/api/admin-orders?resource=promotions"
+    },
+    {
+      "source": "/api/admin-returns",
+      "destination": "/api/admin-orders?resource=returns"
+    },
+    {
+      "source": "/api/admin-reviews",
+      "destination": "/api/admin-orders?resource=reviews"
+    }
+  ]
+}
