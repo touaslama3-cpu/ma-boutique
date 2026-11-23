@@ -3,13 +3,18 @@ const { cj } = require("./_cj");
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_TOKEN = process.env.TAWCO_ADMIN_TOKEN;
+// Jeton technique distinct, limité aux demandes de devis transport CJ.
+const QUOTE_RUN_TOKEN = process.env.TAWCO_CJ_QUOTE_RUN_TOKEN;
 
-function authorized(req) {
+function authorized(req, quoteOnly = false) {
   const value = req.headers.authorization || "";
-  if (!ADMIN_TOKEN) return false;
-  const expected = Buffer.from("Bearer " + ADMIN_TOKEN);
-  const actual = Buffer.from(value);
-  return actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
+  const candidates = quoteOnly ? [ADMIN_TOKEN, QUOTE_RUN_TOKEN] : [ADMIN_TOKEN];
+  return candidates.some(token => {
+    if (!token) return false;
+    const expected = Buffer.from("Bearer " + token);
+    const actual = Buffer.from(value);
+    return actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
+  });
 }
 async function db(path, options = {}) {
   return fetch(SUPABASE_URL + "/rest/v1/" + path, {
@@ -32,7 +37,7 @@ module.exports = async function handler(req, res) {
     res.setHeader("Allow", "GET, POST, PATCH");
     return json(res, 405, { error: "Méthode non autorisée." });
   }
-  if (!authorized(req)) return json(res, 401, { error: "Accès refusé." });
+  if (!authorized(req, req.method === "POST" && req.body?.action === "quote")) return json(res, 401, { error: "Accès refusé." });
   if (!SUPABASE_URL || !SERVICE_KEY) return json(res, 503, { error: "Base de données non configurée." });
 
   try {
