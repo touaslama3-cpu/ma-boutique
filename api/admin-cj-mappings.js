@@ -37,18 +37,19 @@ module.exports = async function handler(req, res) {
     res.setHeader("Allow", "GET, POST, PATCH");
     return json(res, 405, { error: "Méthode non autorisée." });
   }
-  if (!authorized(req, req.method === "POST" && req.body?.action === "quote")) return json(res, 401, { error: "Accès refusé." });
+  const isQuoteRequest = (req.method === "POST" && req.body?.action === "quote") || (req.method === "GET" && req.query?.action === "quote");
+  if (!authorized(req, isQuoteRequest)) return json(res, 401, { error: "Accès refusé." });
   if (!SUPABASE_URL || !SERVICE_KEY) return json(res, 503, { error: "Base de données non configurée." });
 
   try {
-    if (req.method === "GET") {
+    if (req.method === "GET" && req.query?.action !== "quote") {
       const response = await db("supplier_variant_mappings?select=*&order=store_product_id.asc,variant_key.asc");
       const rows = await response.json();
       if (!response.ok) return json(res, 502, { error: "Lecture des références fournisseur impossible." });
       return json(res, 200, { mappings: rows });
     }
 
-    const body = req.body || {};
+    const body = req.method === "GET" ? req.query : (req.body || {});
     if (req.method === "PATCH") {
       const id = String(body.id || "");
       if (!/^[0-9a-f-]{36}$/i.test(id) || typeof body.is_active !== "boolean") {
