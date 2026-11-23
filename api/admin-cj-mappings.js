@@ -170,8 +170,8 @@ module.exports = async function handler(req, res) {
       is_active: body.is_active !== false,
       shipping_method_id: typeof body.shipping_method_id === "string" && body.shipping_method_id.trim() ? body.shipping_method_id.trim().slice(0, 120) : null,
       shipping_method_name: typeof body.shipping_method_name === "string" && body.shipping_method_name.trim() ? body.shipping_method_name.trim().slice(0, 160) : null,
-      shipping_delivery_min_days: Number.isInteger(Number(body.shipping_delivery_min_days)) && Number(body.shipping_delivery_min_days) >= 0 ? Number(body.shipping_delivery_min_days) : null,
-      shipping_delivery_max_days: Number.isInteger(Number(body.shipping_delivery_max_days)) && Number(body.shipping_delivery_max_days) >= 0 ? Number(body.shipping_delivery_max_days) : null,
+      shipping_delivery_min_days: body.shipping_delivery_min_days != null && Number.isInteger(Number(body.shipping_delivery_min_days)) && Number(body.shipping_delivery_min_days) >= 0 ? Number(body.shipping_delivery_min_days) : null,
+      shipping_delivery_max_days: body.shipping_delivery_max_days != null && Number.isInteger(Number(body.shipping_delivery_max_days)) && Number(body.shipping_delivery_max_days) >= 0 ? Number(body.shipping_delivery_max_days) : null,
       shipping_checked_at: typeof body.shipping_checked_at === "string" && Number.isFinite(Date.parse(body.shipping_checked_at)) ? new Date(body.shipping_checked_at).toISOString() : null,
       verified_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
