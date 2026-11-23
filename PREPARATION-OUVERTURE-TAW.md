@@ -1,6 +1,6 @@
 # TAW.co — dossier de préparation avant ouverture
 
-Dernière mise à jour : 22 novembre 2026
+Dernière mise à jour : 23 novembre 2026
 
 ## Règle impérative
 - La page publique reste en mode maintenance.
@@ -17,7 +17,7 @@ Dernière mise à jour : 22 novembre 2026
 - Retours : demande depuis une commande expédiée/livrée, historique client et interface d'administration de suivi. Le statut « remboursé » du retour ne déclenche pas un remboursement Stripe.
 - Promotions : table sécurisée et interface admin de création/désactivation. L'application effective du code dans Stripe Checkout reste à faire avant ouverture.
 - Factures : table prête, mais génération PDF volontairement en attente des mentions légales et fiscales du vendeur.
-- Administration : commandes, chiffre d'affaires, remboursements, expéditions, export CSV DSers, correspondances CJ, promotions, retours et modération des avis.
+- Administration : commandes, chiffre d'affaires, remboursements, expéditions, correspondances CJ, promotions, retours et modération des avis.
 - Les pages sont synchronisées dans les chemins de compte et dans le dossier public utilisé par le site.
 
 ## Sécurité et données
@@ -47,7 +47,7 @@ Dernière mise à jour : 22 novembre 2026
 - Envoi automatique de commandes CJ : ne pas activer sans validation des variantes, coûts, stocks et livraison.
 - Codes promo au checkout : interface d'administration prête, logique de réduction Stripe à terminer.
 - Factures PDF : pas de génération avant validation des informations légales et fiscales du vendeur.
-- Les commits GitHub déclenchent potentiellement des déploiements automatiques Vercel. Le dernier déploiement de production observé est READY sur le commit `3db9859045fef0dec94fbb1233cd1c0a7d9fcb35`, antérieur aux derniers ajouts favoris/avis/retours/promotions. Vérifier un nouveau déploiement avant de considérer ces derniers changements comme publiés.
+- Le 23 novembre 2026, le déploiement de production Vercel `0ffa030291c2ae044192a26233ef458613ca3492` est READY et les alias `taw.co`, `www.taw.co` et `tawco.vercel.app` lui sont rattachés. La limite Hobby de 12 fonctions a été corrigée en regroupant les API admin ; le déploiement de production a abouti.
 - La page publique et la page publiée dans `public/` conservent le verrou de maintenance.
 
 
@@ -62,7 +62,7 @@ Dernière mise à jour : 22 novembre 2026
 - Les codes promotionnels sont administrables, mais leur application au montant Stripe reste à développer et tester.
 - Les premières interfaces/API de retours et de modération des avis sont présentes ; le statut « remboursé » ne déclenche pas un remboursement Stripe.
 - Les factures PDF attendent les véritables coordonnées légales et fiscales.
-- Le dernier déploiement de production observé était antérieur à plusieurs changements du dépôt ; vérifier le prochain déploiement.
+- Le dernier déploiement de production est désormais READY sur le commit `0ffa030291c2ae044192a26233ef458613ca3492`.
 
 ### Suite à réaliser
 1. Associer les 15 produits du catalogue à leurs vrais produits, variantes, SKU et identifiants CJ.
@@ -83,3 +83,31 @@ Dernière mise à jour : 22 novembre 2026
 - Accord explicite avant l'ouverture commerciale.
 
 **Consigne de reprise :** à la prochaine reprise de TAW.co, consulter ce journal et vérifier l'état réel de GitHub, Supabase et Vercel. Ne pas redemander les décisions déjà enregistrées. Ne jamais désactiver la maintenance ni activer les paiements sans demande explicite.
+
+
+## Journal de reprise — 23 novembre 2026
+
+### Travaux effectués et vérifiés
+- Correction de l'échec Vercel : le déploiement précédent dépassait la limite Hobby de 12 fonctions serverless.
+- Regroupement des routes d'administration des avis, retours et promotions dans `api/admin-orders.js`, avec réécritures `vercel.json` qui conservent les URL déjà utilisées par l'interface.
+- Retrait de l'export DSers, qui ne correspond plus au flux fournisseur CJ retenu. Les champs de téléphone Stripe et leur enregistrement Supabase sont déjà présents sur `main` ; ne pas refaire cette modification.
+- PR GitHub #19 fusionnée. Déploiement de production Vercel READY sur le commit `0ffa030291c2ae044192a26233ef458613ca3492`.
+- L'écran de maintenance est présent dans `index.html` et `public/index.html`. Le bouton de paiement est désactivé et la variable `TAWCO_CHECKOUT_ENABLED` n'est pas définie en production : le serveur refuse donc les paiements.
+- Variables de production présentes : Supabase URL/clé serveur, Stripe secret/webhook, CJ API key, Resend API key et expéditeur `ORDER_FROM_EMAIL`. La vérification effective du domaine Resend et l'envoi réel d'un e-mail restent à confirmer.
+- Supabase Security Advisor ne remonte aucun finding de sécurité au contrôle du 23 novembre. Les alertes de performance portent uniquement sur des index non encore utilisés.
+- État des données Supabase : 0 commande, 0 correspondance CJ, 0 devis de livraison enregistrés. C'est cohérent avec le paiement fermé ; aucune commande de test ni fausse correspondance n'a été créée.
+- Le schéma `orders` comprend déjà `customer_phone`, les champs de suivi, remboursement et état de transmission CJ. Les tables client, avis, retours, promotions et devis fournisseur sont présentes.
+
+### À reprendre sans refaire les travaux déjà validés
+1. Compléter les correspondances réelles des 15 produits TAW (produit CJ, variantes, tailles/couleurs, SKU, coût, entrepôt et transporteur). La table étant vide, aucune variante ne peut encore être vendue.
+2. Utiliser les devis CJ vers la France pour chaque variante et enregistrer frais, méthode et délais ; calculer ensuite le coût de revient et les marges.
+3. Finaliser les réglages Supabase Auth (confirmation d'e-mail, URL de redirection et récupération de mot de passe) seulement après lecture de la configuration actuelle.
+4. Vérifier le domaine d'envoi Resend et faire un test contrôlé d'e-mail, sans envoyer de message à un client réel.
+5. Terminer les réductions promotionnelles côté serveur/Stripe avec contrôle atomique des limites et dates.
+6. Vérifier les remboursements Stripe test et les e-mails transactionnels ; ne pas confondre statut de retour et remboursement financier.
+7. Compléter les mentions légales, CGV, confidentialité/cookies, livraison et rétractation avec les véritables informations du vendeur. Ne pas inventer de SIREN/SIRET, adresse, TVA ou médiateur.
+8. Préparer les factures PDF après validation des informations légales et fiscales.
+9. Faire une seule recette finale ciblée des fonctions qui auront été modifiées ; ne pas répéter les tests déjà confirmés.
+10. Garder maintenance et paiements désactivés jusqu'à autorisation explicite d'ouverture.
+
+**Consigne de reprise :** ne pas refaire la vérification du schéma, des tables, de la présence des variables Vercel ni du déploiement READY sans raison. Priorité immédiate : associer les vrais produits/variantes CJ et obtenir les devis France. Ne jamais activer les paiements ou envoyer une commande CJ réelle sans validation explicite.
