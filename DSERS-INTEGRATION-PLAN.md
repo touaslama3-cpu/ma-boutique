@@ -8,6 +8,8 @@
 - Le fournisseur cible est DSers/AliExpress uniquement. CJ Dropshipping est hors périmètre.
 
 ## État technique constaté
+- Audit détaillé ajouté dans `DSERS-TECHNICAL-AUDIT.md`.
+- Fondation SQL additive ajoutée dans `supabase/migrations/20261124120000_supplier_neutral_dsers_foundation.sql` : correspondances fournisseur neutres, file de fulfillment idempotente et champs de suivi. Cette migration est uniquement dans la branche ; elle n'a pas été exécutée sur Supabase.
 - Le checkout Stripe actuel utilise un catalogue codé en dur (IDs 101–115).
 - Il exige une ligne active dans `supplier_variant_mappings` et vérifie actuellement `cj_variant_id`.
 - Le schéma de correspondance fournisseur contient des champs CJ obligatoires (`cj_product_id`, `cj_variant_id`, `logistic_name`).
@@ -16,6 +18,7 @@
 - Le site est une application personnalisée Vercel. Le canal DSers actuellement affiché dans le compte est Wix/Chicall, pas TAW.co.
 
 ## Étape 3 — checkout et commandes
+La préparation du schéma neutre est écrite, mais le checkout et le webhook n'ont pas encore été migrés. Ils restent volontairement inchangés tant que le contrat DSers, les 9 SKU et les prix/frais exacts ne sont pas validés.
 À implémenter après définition et validation du contrat DSers Channel App :
 1. Remplacer le catalogue codé en dur par un catalogue TAW validé avec prix TTC en centimes.
 2. Créer une table de correspondances fournisseur neutre (produit TAW, clé variante, SKU AliExpress, identifiant produit/variante fournisseur DSers, coût, devise, disponibilité, méthode et coût de livraison vers FR, date de vérification).
@@ -25,6 +28,7 @@
 6. En cas d'indisponibilité DSers, conserver la commande en attente et alerter l'administrateur; ne pas perdre la commande et ne pas facturer une seconde fois.
 
 ## Étape 4 — liaison DSers
+L'audit a confirmé qu'aucun identifiant, secret, sandbox ou approbation DSers n'est présent dans le dépôt. La prochaine action externe est l'inscription/validation développeur ou une confirmation écrite de DSers sur le canal personnalisé TAW.co.
 La documentation DSers indique que les boutiques personnalisées nécessitent une Channel App : inscription développeur, configuration, API d'autorisation, développement, tests et approbation/publication DSers. Le propriétaire d'une boutique standard peut aussi demander une intégration à DSers Support ou utiliser CSV en attendant.
 Aucun jeton, identifiant d'application, secret, endpoint de production ou approbation DSers n'est actuellement enregistré dans ce dépôt. Ne pas inventer ces valeurs et ne pas coder un faux endpoint.
 
